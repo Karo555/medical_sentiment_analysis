@@ -1,0 +1,263 @@
+# configs/data_encoder.yaml
+# WIDOK DANYCH dla ENCODERÓW (regresja 21D): z jednego rekordu źródłowego
+# budujemy pojedynczy ciąg tekstowy (string) zgodny z wybranym trybem,
+# a następnie (opcjonalnie) materializujemy wersję potokenizowaną.
+#
+# Rekord wyjściowy (po materializacji "text view"):
+# { id, input_text, labels, lang, persona_id }
+#
+# Jeśli włączysz materializację potokenizowaną, zapisujemy także:
+# { input_ids, attention_mask, (opcjonalnie) token_type_ids } jako plik Arrow/Parquet.
+
+version: 1
+name: encoder_data_view
+description: >
+  Dane do fine-tuningu encoderów (XLM-R, mDeBERTa) w trybie regresji.
+  Z rekordu {text, persona_id, persona_desc, lang, labels[21]} budujemy input_text
+  według wybranego trybu (non-personalized, persona_token, personalized_desc).
+  Target to wektor 21 floatów w zakresie [0,1].
+
+# ---------------------------------------------------------------------------
+# ŚCIEŻKI I PLIKI
+# ---------------------------------------------------------------------------
+paths:
+  raw_dir: data/raw                      # źródła „prawdy”
+  processed_base_dir: data/processed/base   # rekordy po wspólnym preprocessie (kontrakt źródłowy)
+  view_dir: data/processed/encoder       # materializacja widoku ENCODER
+  tokenized_dir: data/processed/encoder_tokenized  # (opcjonalnie) zapis potokenizowanych danych
+  reports_dir: reports/encoder
+  personas_file: data/personas/personas.json      # słownik person (opcjonalnie do sanity check)
+  label_names_file: schema/label_names.json       # lista 21 nazw etykiet (kolejność)
+
+files:
+  # zakładamy, że base ma co najmniej te pliki jsonl
+  base_train: train.jsonl
+  base_val: val.jsonl
+  base_test: test.jsonl
+
+  # nazwy docelowe widoku
+  train: train.jsonl
+  val: val.jsonl
+  test: test.jsonl
+
+external_splits:
+  enabled: true
+  dir: data/splits
+  train: train_ids.csv     # kolumna: id
+  val: val_ids.csv
+  test: test_ids.csv
+
+# ---------------------------------------------------------------------------
+# KONTRAKT REKORDU ŹRÓDŁOWEGO (z processed_base_dir)
+# ---------------------------------------------------------------------------
+source_record_contract:
+  required_fields:
+    - id
+    - text
+    - persona_id
+    - persona_desc
+    - lang
+    - labels
+  field_types:
+    id: string
+    text: string
+    persona_id: string
+    persona_desc: string
+    lang: string
+    labels: array[float]
+  constraints:
+    lang_allowed: ["pl", "en"]
+    labels_length: 21
+    labels_range: [0.0, 1.0]
+    persona_id_pattern: "^[a-z0-9_\\-]+$"
+  on_missing:
+    policy: drop_with_report
+  on_out_of_range:
+    policy: clamp_and_report
+
+# ---------------------------------------------------------------------------
+# BUDOWANIE TEKSTU WEJŚCIOWEGO (input_text) DLA ENCODERÓW
+# ---------------------------------------------------------------------------
+input_build:
+  tokens:
+    lang_tag_format: "<lang={lang}>"           # np. <lang=pl>
+    persona_token_format: "<p:{persona_id}>"   # np. <p:young_mother>
+    persona_block:
+      start: "<persona>"
+      end: "</persona>"
+
+  global:
+    include_lang_tag: true
+    include_trailing_newline: false
+    normalize_whitespace: true
+    strip_text: true
+    max_total_chars: 6000
+    truncate_strategy: "end"   # "start" | "end"
+
+  # Tryby budowania wejścia (string tuż przed tokenizacją):
+  modes:
+    # 1) Brak personalizacji (ignorujemy personę)
+    non_personalized: |
+      {lang_tag} {text}
+
+    # 2) Specjalny token persony (ID → token)
+    persona_token: |
+      {persona_token} {lang_tag} {text}
+
+    # 3) Personalizacja opisem persony (semantyka doklejana do kontekstu)
+    personalized_desc: |
+      {lang_tag} {persona_block_start} {persona_desc} {persona_block_end} {text}
+
+  render:
+    include_persona_token_in_modes: ["persona_token"]
+    include_persona_desc_in_modes: ["personalized_desc"]
+    collapse_spaces: true
+
+# ---------------------------------------------------------------------------
+# REJESTRACJA SPECJALNYCH TOKENÓW (dla tokenizerów encoderów)
+# ---------------------------------------------------------------------------
+special_tokens:
+  enabled: true
+  # Zbiór minimalny (zwykle bezpieczny dla XLM-R/mDeBERTa)
+  base_list:
+    - "<persona>"
+    - "</persona>"
+    - "<lang=pl>"
+    - "<lang=en>"
+  # Prefiks do generowania tokenów person na podstawie persona_id.
+  persona_token_prefix: "<p:"
+  persona_token_suffix: ">"
+  # Skąd wziąć listę persona_id do rejestracji (opcjonalnie, można też rejestrować on-the-fly)
+  build_from_personas_file:
+    enabled: true
+    file: data/personas/personas.json   # oczekiwany klucz: id
+    # Jeśli false → rejestruj tokeny „on demand” podczas runtime’u
+
+# ---------------------------------------------------------------------------
+# TOKENIZACJA (parametry przekazywane do HuggingFace tokenizer.encode_plus)
+# ---------------------------------------------------------------------------
+tokenization:
+  pretrained_tokenizer_name: "xlm-roberta-base"  # tylko jako domyślna wskazówka dla skryptu danych
+  max_length: 256
+  padding: "max_length"     # "max_length" | "longest" | "do_not_pad"
+  truncation: true
+  return_token_type_ids: false
+  add_special_tokens: true
+  # Jeżeli tokenizer wspiera fast tokenizers (zalecane):
+  use_fast: true
+
+materialize_tokenized:
+  enabled: false                 # jeśli true → dodatkowo zapisujemy Arrow/Parquet z tensorami
+  format: "arrow"                # "arrow" | "parquet"
+  filename_prefix:
+    train: "train_tok"
+    val: "val_tok"
+    test: "test_tok"
+  columns:
+    - input_ids
+    - attention_mask
+    # - token_type_ids           # włącz tylko jeśli model ich wymaga
+
+# ---------------------------------------------------------------------------
+# TARGET (labels) – przygotowanie i sanity-check
+# ---------------------------------------------------------------------------
+target:
+  dtype: "float32"
+  clamp_to_range: [0.0, 1.0]
+  ensure_length: 21
+  # scaling/standardization zostawiamy wyłączone (pracujemy na [0,1])
+  scaling:
+    enabled: false
+  # ewentualne maski/wykluczenia etykiet (np. brakujące)
+  mask_missing:
+    enabled: false
+    fill_value: 0.0
+
+# ---------------------------------------------------------------------------
+# FILTRY, DEDUPLIKACJA, BALANS
+# ---------------------------------------------------------------------------
+filters:
+  text_min_chars: 5
+  text_max_chars: 4000
+  drop_if_missing_persona_desc_in_modes: ["personalized_desc"]
+  deduplication:
+    enabled: true
+    scope: "within-split"
+    key: "text"
+    normalization:
+      lower: true
+      strip: true
+      collapse_spaces: true
+
+balancing:
+  enabled: true
+  by_lang:
+    target_dist:
+      pl: 0.5
+      en: 0.5
+    strategy: "reweight"     # "reweight" | "undersample" | "oversample" | "none"
+    tolerance: 0.05
+  by_persona:
+    min_per_persona: 50
+    max_per_persona: 5000
+    strategy: "clip_and_reweight"
+
+# ---------------------------------------------------------------------------
+# KOLUMNY I ZAPIS WIDOKU
+# ---------------------------------------------------------------------------
+materialization:
+  output_format: "jsonl"         # lekki i prosty do debugowania
+  output_columns:
+    - id
+    - input_text
+    - labels
+    - lang
+    - persona_id
+  write_mode: "overwrite"
+  shard_size: 100000
+  write_reports:
+    schema_violations: true
+    fixups_applied: true
+    class_balance: true
+
+# ---------------------------------------------------------------------------
+# SPLITOWANIE
+# ---------------------------------------------------------------------------
+splits:
+  use_external: true
+  if_external_missing_fallback: "random"  # "error" | "random"
+  random_seed: 1337
+  random_ratios:
+    train: 0.8
+    val: 0.1
+    test: 0.1
+  stratify_by: ["lang", "persona_id"]
+
+# ---------------------------------------------------------------------------
+# AUGMENTACJE (opcjonalne – domyślnie wyłączone)
+# ---------------------------------------------------------------------------
+augmentation:
+  enabled: false
+  methods:
+    backtranslation:
+      enabled: false
+      langs: ["pl", "en"]
+      probability: 0.1
+    paraphrase:
+      enabled: false
+      probability: 0.1
+  apply_to:
+    text: true
+    persona_desc: false
+
+# ---------------------------------------------------------------------------
+# LOGOWANIE I REPRODUKCJA
+# ---------------------------------------------------------------------------
+logging:
+  level: "INFO"
+  preview_n_examples_per_split: 3
+  save_preview_to: "reports/encoder/preview_examples.jsonl"
+
+reproducibility:
+  seed: 1337
+  deterministic_ops: true
