@@ -10,5 +10,9 @@ dependencies = [
     "transformers",
     "torch",
     "pandas",
-    "scikit-learn"
+    "scikit-learn",
+    "tiktoken",
+    "protobuf",
+    "sentencepiece",
+    "transformers[sentencepiece]"
 ]

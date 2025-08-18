@@ -78,3 +78,6 @@ build-llm-personalized-desc:
 
 build-llm-personalized-instr:
 	$(PY) scripts/build_llm_view.py --config $(CONFIG_LLM) --mode personalized_instruction
+
+register-tokens:
+	python -m modules.data.tokenizer_utils --config configs/tok.yaml

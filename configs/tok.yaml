@@ -1,0 +1,180 @@
+# configs/tok.yaml
+# Konfiguracja rejestracji specjalnych tokenów dla ENCODERÓW
+# (XLM-R / mDeBERTa v3) oraz inicjalizacji ich embeddingów.
+# Ten plik jest czytany przez moduł utils, który:
+#  1) ładuje tokenizer bazowy,
+#  2) generuje listę tokenów (językowych, blokowych i per-persona),
+#  3) dodaje je do tokenizer.vocab,
+#  4) zwraca mapę nowych id oraz zasady inicjalizacji embeddingów,
+#  5) zapisuje zmodyfikowany tokenizer do artifacts/tokenizers/<…>.
+
+version: 1
+name: tokenizer_persona_pack
+description: >
+  Rejestruje tokeny: <lang=pl>, <lang=en>, <persona>, </persona>,
+  <p:{persona_id}> dla każdej persony z personas.json. Zgodne z polami w data_encoder.yaml.
+
+# ------------------------------------------------------------------------------
+# ŚCIEŻKI I MODELE
+# ------------------------------------------------------------------------------
+paths:
+  personas_file: data/personas/personas.json
+  output_root: artifacts/tokenizers        # tu zapisujemy zmodyfikowane tokenizery
+  reports_dir: reports/tokenizer           # logi i raporty z rejestracji
+  # (opcjonalnie) kopia kontraktu etykiet (nieużywana w rejestracji, ale bywa przydatna do sanity checku)
+  label_names_file: schema/label_names.json
+
+# Identyfikatory tokenizerów bazowych (HF) – używane przez narzędzia pomocnicze.
+# Możesz dodać kolejne.
+base_tokenizers:
+  xlm_roberta_base: xlm-roberta-base
+  xlm_roberta_large: xlm-roberta-large
+  mdeberta_v3_base: microsoft/mdeberta-v3-base
+
+# Nazwy podfolderów, w których zapiszemy zmodyfikowane tokenizery
+save_names:
+  xlm_roberta_base: xlmr-base-with-personas
+  xlm_roberta_large: xlmr-large-with-personas
+  mdeberta_v3_base: mdeberta-v3-base-with-personas
+
+# ------------------------------------------------------------------------------
+# SPECJALNE TOKENY (ŹRÓDŁO PRAWDY)
+# ------------------------------------------------------------------------------
+special_tokens:
+  # Tag językowy (zgodne z data_encoder.yaml.tokens.lang_tag_format)
+  lang_tags:
+    - "<lang=pl>"
+    - "<lang=en>"
+
+  # Blok opisu persony (zgodne z data_encoder.yaml.tokens.persona_block)
+  persona_block:
+    start: "<persona>"
+    end: "</persona>"
+
+  # Prefix dla person-ID w trybie „persona token” (zgodne z data_encoder.yaml.tokens.persona_token_format)
+  persona_token_format: "<p:{persona_id}>"
+
+  # Dodatkowe znaczniki kontrolne (opcjonalne, można rozszerzyć)
+  extras:
+    - "<text>"
+    - "</text>"
+    - "<sep>"
+
+  # Tokeny specjalne HF (nie zawsze używane przez encodery; zostawiamy puste = bez zmian)
+  hf_specials:
+    pad_token: null
+    bos_token: null
+    eos_token: null
+    unk_token: null
+    cls_token: null
+    sep_token: null
+    mask_token: null
+
+# ------------------------------------------------------------------------------
+# GENEROWANIE TOKENÓW PER-PERSONA
+# ------------------------------------------------------------------------------
+personas:
+  # Źródło: lista obiektów z 'id' (schema: data/personas/personas.json)
+  source: from_file
+  id_field: "id"
+  id_pattern: "^[a-z0-9_\\-]+$"
+  # Jak generować token:
+  build_token:
+    prefix: "<p:"
+    suffix: ">"
+    # wynik: f"{prefix}{persona_id}{suffix}" → np. "<p:young_mother>"
+  # Co zrobić, gdy token już istnieje w bazowym tokenizerze
+  on_collision: "skip_and_warn"   # skip_and_warn | error | rename_with_suffix
+  # Filtry (opcjonalne): pozwalają pominąć niektóre persony
+  filters:
+    allow_ids: []                 # pusta lista = wszystkie
+    deny_ids: []                  # pusta lista = żadna
+
+# ------------------------------------------------------------------------------
+# WALIDACJA I RAPORTY
+# ------------------------------------------------------------------------------
+validation:
+  # Sprawdź, że żaden z poniższych tokenów NIE jest rozbijany przez bazowy tokenizer na subtokeny
+  # (dotyczy już po dodaniu do vocab; dla SentencePiece wymagane jest add_special_tokens).
+  enforce_as_single_token:
+    enabled: true
+    tokens:
+      use_lang_tags: true
+      use_persona_block: true
+      use_persona_tokens: true
+      use_extras: true
+
+  # Sprawdź, czy bez dodawania tokenów persona większość z nich byłaby rozbita/UNK (raport „zysku”)
+  measure_unk_rate_if_not_added: true
+
+  # Raport co zostało dodane i pod jakimi id
+  write_registry_report: true
+  registry_report_file: "reports/tokenizer/registry.json"
+
+# ------------------------------------------------------------------------------
+# INICJALIZACJA EMBEDDINGÓW DLA NOWYCH TOKENÓW
+# ------------------------------------------------------------------------------
+embedding_init:
+  # Strategia dla tokenów per-persona:
+  persona_tokens:
+    strategy: "avg_subwords_or_random"   # avg_subwords_or_random | random_normal | zero
+    # Jeśli 'avg_subwords_or_random': spróbujemy złożyć id (np. "young_mother") z subtokenów
+    # ("young", "mother") istniejących w bazowym słowniku; jeśli nie – użyjemy random_normal.
+    subword_split_regex: "[-_]"
+    random_normal_std: 0.02
+
+  # Strategia dla tagów językowych i blokowych
+  control_tokens:
+    strategy: "random_normal"
+    random_normal_std: 0.02
+
+  # Zastosować layernorm do nowych wektorów? (czasem stabilizuje)
+  post_init_layernorm: false
+
+# ------------------------------------------------------------------------------
+# ZASTOSOWANIE / ZAPIS / INTEGRACJA
+# ------------------------------------------------------------------------------
+apply:
+  # Dla jakich modeli dodać tokeny (klucze z base_tokenizers/save_names)
+  models:
+    - xlm_roberta_base
+    - mdeberta_v3_base
+  # Rozszerzyć embeddingi modelu po dodaniu tokenów (HF: model.resize_token_embeddings)
+  resize_model_embeddings: true
+  # Czy zamrozić bazowe embeddingi i uczyć tylko nowe (czasem pomaga przy małych zbiorach)
+  freeze_base_token_embeddings: false
+  # Czy logować mapowanie: token -> id
+  log_token2id: true
+
+save:
+  # Zapisy zmodyfikowanych tokenizerów (po jednym per model w apply.models)
+  dir_per_model: true
+  overwrite: true
+
+# ------------------------------------------------------------------------------
+# BEZPIECZNIKI I ZGODNOŚĆ Z RÓŻNYMI BACKENDAMI
+# ------------------------------------------------------------------------------
+backend_hints:
+  # SentencePiece (XLM-R, mDeBERTa v3) → używaj 'additional_special_tokens' zamiast train_vocab
+  prefer_additional_special_tokens: true
+  # Wymuś, by nowo dodane były traktowane jako „specjalne” (niesegmentowane)
+  mark_as_special: true
+  # Dla WordPiece/BPE (gdybyś używała innych modeli)
+  add_prefix_space_for_bpe_like: false
+
+# ------------------------------------------------------------------------------
+# SMOKE-TEST (opcjonalne: narzędzie helpera może wykorzystać te ustawienia)
+# ------------------------------------------------------------------------------
+smoke_test:
+  enable: true
+  sample_persona_ids: ["young_mother", "senior_patient"]
+  sample_texts:
+    - "<lang=pl> <p:young_mother> <persona>Young mother with a child...</persona> Tekst przykładowy."
+    - "<lang=en> <p:senior_patient> <persona>Elderly patient...</persona> Example text."
+  expect_single_tokens:
+    - "<lang=pl>"
+    - "<lang=en>"
+    - "<persona>"
+    - "</persona>"
+    - "<p:young_mother>"
+    - "<p:senior_patient>"
