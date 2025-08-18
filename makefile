@@ -8,11 +8,15 @@ SAMPLE := data/processed/base/sample.jsonl
 ENC_MODE ?= persona_token   # non_personalized | persona_token | personalized_desc
 LLM_MODE ?= personalized_desc  # non_personalized | persona_token | personalized_desc | personalized_instruction
 
+CHECKPOINT ?= artifacts/models/encoder/enc_baseline_xlmr
+EVAL_SPLIT ?= val  # val | test
+
 # ===== Phony =====
 .PHONY: help preview-base preview-llm preview-enc preview-enc-tokenize \
         prepare-data prepare-data-with-id make-splits \
         build-enc-view build-enc-nonpers build-enc-persona-token build-enc-personalized \
-		build-llm-view build-llm-nonpers build-llm-persona-token build-llm-personalized-desc build-llm-personalized-instruction
+		build-llm-view build-llm-nonpers build-llm-persona-token build-llm-personalized-desc build-llm-personalized-instruction \
+		eval-enc eval-enc-test
 
 help:
 	@echo "preview-base              - smoke test kontraktu bazowego"
@@ -81,3 +85,12 @@ build-llm-personalized-instr:
 
 register-tokens:
 	python -m modules.data.tokenizer_utils --config configs/tok.yaml
+
+train-enc-baseline:
+	$(PY) scripts/train_encoder.py --config configs/experiment/enc_baseline.yaml
+
+eval-enc:
+	$(PY) scripts/eval_encoder.py --config configs/experiment/enc_baseline.yaml --split $(EVAL_SPLIT) --checkpoint $(CHECKPOINT)
+
+eval-enc-test:
+	$(PY) scripts/eval_encoder.py --config configs/experiment/enc_baseline.yaml --split test --checkpoint $(CHECKPOINT)
