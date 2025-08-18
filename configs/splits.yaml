@@ -93,7 +93,7 @@ lolo:
   enabled: true
   langs: "auto"                       # albo: ["pl","en"]
   seed: 1337
-  val_ratio_within_train: 0.1
+  val_ratio_within_train: 0.2 #zmienione z 0.1
   stratify_by: ["persona_id"]
   min_test_size: 50
   write_empty_folds: false

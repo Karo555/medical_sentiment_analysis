@@ -18,7 +18,7 @@ description: >
 # ---------------------------------------------------------------------------
 paths:
   raw_dir: data/raw                    # źródła „prawdy” (opinie, persony)
-  processed_dir: data/processed        # dane po preprocessingu
+  processed_dir: data/processed/base        # dane po preprocessingu
   view_dir: data/processed/llm         # materializacja widoku LLM (input_text/target_text)
   reports_dir: reports/llm             # raporty walidacji
   personas_file: data/personas/personas.json      # kanoniczny słownik person (opcjonalny)
@@ -84,15 +84,14 @@ prompt:
     normalize_whitespace: true
     strip_input_text: true
     max_total_chars: 6000          # twardy limit bezpieczeństwa, zanim przetniemy
+    fixed_system_lang: "en"
     truncate_strategy: "end"       # "start" | "end"
     add_system_prefix: true        # doda nagłówek z instrukcją w polu 'system_prefix'
 
   # Instrukcje bazowe (możesz edytować style)
   system_prefix: |
-    Instrukcja: Na podstawie TEKSTU opinii i informacji o osobie (jeśli podano) przewidź 21 wartości w zakresie 0–1.
-    Zwróć odpowiedź w DOKŁADNYM formacie JSON:
-    {"labels": [f1, f2, ..., f21]}
-    Gdzie f_i są liczbami z zakresu [0,1]. Nie dodawaj komentarzy ani tekstu poza JSON.
+    Instruction: Based on the REVIEW TEXT and (if provided) the PERSON description, predict 21 values in [0,1].
+    Return EXACT JSON: {"labels":[f1,...,f21]} with 21 numbers in [0,1]. No extra text.
 
   # Tryby personalizacji budujące input_text.
   # Zmienna {text} to treść opinii, {lang} to "pl"|"en",
