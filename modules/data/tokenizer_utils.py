@@ -297,13 +297,13 @@ def register_for_model(base_model_id: str, save_name: str, cfg: Dict[str, Any]) 
     all_tokens = tok_groups["all_tokens"]
 
     # 1) Base tokenizer (for before/after comparisons)
-    base_tok = AutoTokenizer.from_pretrained(base_model_id, use_fast=True)
+    base_tok = AutoTokenizer.from_pretrained(base_model_id, use_fast=False)
     before_report = {}
     if cfg.get("validation", {}).get("measure_unk_rate_if_not_added", True):
         before_report = measure_unk_rate_before_addition(base_tok, all_tokens)
 
     # 2) Working tokenizer to modify
-    tokenizer = AutoTokenizer.from_pretrained(base_model_id, use_fast=True)
+    tokenizer = AutoTokenizer.from_pretrained(base_model_id, use_fast=False)
 
     # Ustaw HF specials jeśli proszone (zachowujemy None = bez zmian)
     hf_spec = cfg["special_tokens"].get("hf_specials", {})
@@ -336,40 +336,57 @@ def register_for_model(base_model_id: str, save_name: str, cfg: Dict[str, Any]) 
             sample = bad[:5]
             raise SystemExit(f"[ERROR] Some tokens are not single-piece after addition: {sample}")
 
-    # 5) (Optional) Load model & resize embeddings & initialize
+   # 5) (Optional) Load model & resize embeddings & initialize
     apply_cfg = cfg.get("apply", {})
     resize_model_embeddings = bool(apply_cfg.get("resize_model_embeddings", True))
 
-    model_report = {}
+    model_report: Dict[str, Any] = {}
     new_token_ids: Dict[str, int] = {}
+
     if resize_model_embeddings:
-        # ładowanie modelu encodera
+        # Load model (no shrink policy)
         model = AutoModel.from_pretrained(base_model_id)
-        orig_vocab = model.get_input_embeddings().weight.shape[0]
+        emb = model.get_input_embeddings()
+        orig_vocab = emb.weight.shape[0]
 
-        # Rozszerzenie macierzy
-        model.resize_token_embeddings(len(tokenizer))
+        # Tokens added to the *tokenizer* (token -> id)
+        added_vocab_map = tokenizer.get_added_vocab()  # {token: id}
+        new_token_ids = {t: int(i) for t, i in added_vocab_map.items()}
 
-        # Zidentyfikuj NOWE tokeny (po dodaniu)
-        for tok in all_tokens:
-            tid = tokenizer.convert_tokens_to_ids(tok)
-            if tid is not None and tid >= orig_vocab:
-                new_token_ids[tok] = int(tid)
+        # Determine target embedding size (only grow; never shrink)
+        max_added_id = max(new_token_ids.values(), default=-1)
+        target_size = max(orig_vocab, max_added_id + 1)
+        if target_size > orig_vocab:
+            model.resize_token_embeddings(target_size)
 
-        # Inicjalizacja wektorów
+        new_vocab = model.get_input_embeddings().weight.shape[0]
+
+        # Initialize ALL added tokens (even if their id < orig_vocab)
         persona_set = set(persona_tokens)
-        init_report = _init_vectors_for_new_tokens(model, tokenizer, list(new_token_ids.keys()), persona_set, cfg)
+        init_report = _init_vectors_for_new_tokens(
+            model=model,
+            tokenizer=tokenizer,
+            new_token_list=list(new_token_ids.keys()),
+            persona_tokens_set=persona_set,
+            cfg=cfg,
+        )
 
-        # (opcjonalne) post-init layernorm — pominę w tym narzędziu, bo lepiej zrobić to w modelu/head
-        # zapis modelu? — zwykle zapisujemy sam tokenizer; embeddingi i tak będą wczytane
         model_report = {
             "orig_vocab": int(orig_vocab),
-            "new_vocab": int(model.get_input_embeddings().weight.shape[0]),
-            "new_tokens": {k: int(v) for k, v in new_token_ids.items()},
-            "init": init_report,
+            "new_vocab": int(new_vocab),
+            "new_tokens": new_token_ids,  # {token: id}
+            "init": init_report,          # per-token init info
         }
+
+        tokenizer_base_size = getattr(tokenizer, "vocab_size", None)
+        if tokenizer_base_size is not None and orig_vocab > tokenizer_base_size:
+            print(
+                f"[WARN] Model embedding size ({orig_vocab}) > tokenizer base vocab ({tokenizer_base_size}). "
+                "Model wygląda na wcześniej rozszerzony; nie zmniejszamy embeddingów, inicjalizujemy dodane tokeny."
+            )
     else:
-        print("[INFO] Skipping model resize/init (apply.resize_model_embeddings=False).")
+        print("[INFO] Skipping model resize/init (apply.resize_token_embeddings=False).")
+
 
     # 6) Save tokenizer
     tokenizer.save_pretrained(str(out_root))

@@ -333,6 +333,11 @@
       "orig_vocab": 250002,
       "new_vocab": 250026,
       "new_tokens": {
+        "<s>": 0,
+        "<pad>": 1,
+        "</s>": 2,
+        "<unk>": 3,
+        "<mask>": 250001,
         "<lang=pl>": 250002,
         "<lang=en>": 250003,
         "<persona>": 250004,
@@ -359,1006 +364,65 @@
         "<p:empathic_persona>": 250025
       },
       "init": {
+        "<s>": {
+          "id": 0,
+          "init": "control_random",
+          "norm": 0.552478015422821
+        },
+        "<pad>": {
+          "id": 1,
+          "init": "control_random",
+          "norm": 0.544201135635376
+        },
+        "</s>": {
+          "id": 2,
+          "init": "control_random",
+          "norm": 0.5457943081855774
+        },
+        "<unk>": {
+          "id": 3,
+          "init": "control_random",
+          "norm": 0.554709255695343
+        },
+        "<mask>": {
+          "id": 250001,
+          "init": "control_random",
+          "norm": 0.5605369806289673
+        },
         "<lang=pl>": {
           "id": 250002,
           "init": "control_random",
-          "norm": 0.5688003301620483
+          "norm": 0.5591142773628235
         },
         "<lang=en>": {
           "id": 250003,
           "init": "control_random",
-          "norm": 0.5629648566246033
+          "norm": 0.5640986561775208
         },
         "<persona>": {
           "id": 250004,
           "init": "control_random",
-          "norm": 0.5411449074745178
+          "norm": 0.5336756110191345
         },
         "</persona>": {
           "id": 250005,
           "init": "control_random",
-          "norm": 0.5458191633224487
+          "norm": 0.5417093634605408
         },
         "<text>": {
           "id": 250006,
           "init": "control_random",
-          "norm": 0.5620705485343933
+          "norm": 0.5568736791610718
         },
         "</text>": {
           "id": 250007,
           "init": "control_random",
-          "norm": 0.5620148181915283
+          "norm": 0.5694509744644165
         },
         "<sep>": {
           "id": 250008,
           "init": "control_random",
-          "norm": 0.5291481018066406
-        },
-        "<p:senior_patient>": {
-          "id": 250009,
-          "init": "avg_subwords",
-          "norm": 5.144376277923584
-        },
-        "<p:young_mother>": {
-          "id": 250010,
-          "init": "avg_subwords",
-          "norm": 4.9385600090026855
-        },
-        "<p:health_anxiety_patient>": {
-          "id": 250011,
-          "init": "avg_subwords",
-          "norm": 4.775485515594482
-        },
-        "<p:medically_educated_patient>": {
-          "id": 250012,
-          "init": "avg_subwords",
-          "norm": 5.72256326675415
-        },
-        "<p:low_education_patient>": {
-          "id": 250013,
-          "init": "avg_subwords",
-          "norm": 4.536380767822266
-        },
-        "<p:lgbtq_patient>": {
-          "id": 250014,
-          "init": "avg_subwords",
-          "norm": 5.72256326675415
-        },
-        "<p:rural_patient>": {
-          "id": 250015,
-          "init": "avg_subwords",
-          "norm": 5.149766445159912
-        },
-        "<p:young_adult_patient>": {
-          "id": 250016,
-          "init": "avg_subwords",
-          "norm": 4.7351484298706055
-        },
-        "<p:supervising_physician>": {
-          "id": 250017,
-          "init": "avg_subwords",
-          "norm": 6.177419662475586
-        },
-        "<p:clinic_manager>": {
-          "id": 250018,
-          "init": "avg_subwords",
-          "norm": 5.287963390350342
-        },
-        "<p:complaints_specialist>": {
-          "id": 250019,
-          "init": "avg_subwords",
-          "norm": 5.835561752319336
-        },
-        "<p:healthcare_journalist>": {
-          "id": 250020,
-          "init": "avg_subwords",
-          "norm": 5.79875373840332
-        },
-        "<p:mental_health_advocate>": {
-          "id": 250021,
-          "init": "avg_subwords",
-          "norm": 4.611449718475342
-        },
-        "<p:ai_therapist>": {
-          "id": 250022,
-          "init": "avg_subwords",
-          "norm": 5.127153396606445
-        },
-        "<p:emotionally_sensitive_persona>": {
-          "id": 250023,
-          "init": "avg_subwords",
-          "norm": 5.2680559158325195
-        },
-        "<p:neutral_rational_persona>": {
-          "id": 250024,
-          "init": "avg_subwords",
-          "norm": 4.991016864776611
-        },
-        "<p:empathic_persona>": {
-          "id": 250025,
-          "init": "avg_subwords",
-          "norm": 6.1143388748168945
-        }
-      }
-    }
-  },
-  {
-    "model": "xlm-roberta-base",
-    "base_model_id": "xlm-roberta-base",
-    "save_dir": "artifacts/tokenizers/xlmr-base-with-personas",
-    "added_counts": {
-      "persona_tokens": 17,
-      "control_tokens": 7,
-      "actually_single_token": 24
-    },
-    "before_unk_report": {
-      "multi_piece": 24,
-      "unk_like": 0,
-      "total": 24,
-      "details": [
-        {
-          "token": "<lang=pl>",
-          "pieces": [
-            "▁<",
-            "lang",
-            "=",
-            "pl",
-            ">"
-          ]
-        },
-        {
-          "token": "<lang=en>",
-          "pieces": [
-            "▁<",
-            "lang",
-            "=",
-            "en",
-            ">"
-          ]
-        },
-        {
-          "token": "<persona>",
-          "pieces": [
-            "▁<",
-            "person",
-            "a",
-            ">"
-          ]
-        },
-        {
-          "token": "</persona>",
-          "pieces": [
-            "▁",
-            "</",
-            "person",
-            "a",
-            ">"
-          ]
-        },
-        {
-          "token": "<text>",
-          "pieces": [
-            "▁<",
-            "text",
-            ">"
-          ]
-        },
-        {
-          "token": "</text>",
-          "pieces": [
-            "▁",
-            "</",
-            "text",
-            ">"
-          ]
-        },
-        {
-          "token": "<sep>",
-          "pieces": [
-            "▁<",
-            "sep",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:senior_patient>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "sen",
-            "ior",
-            "_",
-            "patient",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:young_mother>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "yo",
-            "ung",
-            "_",
-            "mo",
-            "ther",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:health_anxiety_patient>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "health",
-            "_",
-            "an",
-            "xie",
-            "ty",
-            "_",
-            "patient",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:medically_educated_patient>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "med",
-            "ically",
-            "_",
-            "educa",
-            "ted",
-            "_",
-            "patient",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:low_education_patient>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "low",
-            "_",
-            "educa",
-            "tion",
-            "_",
-            "patient",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:lgbtq_patient>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "lg",
-            "bt",
-            "q",
-            "_",
-            "patient",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:rural_patient>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "r",
-            "ural",
-            "_",
-            "patient",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:young_adult_patient>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "yo",
-            "ung",
-            "_",
-            "adult",
-            "_",
-            "patient",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:supervising_physician>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "super",
-            "vis",
-            "ing",
-            "_",
-            "phy",
-            "si",
-            "cian",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:clinic_manager>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "clin",
-            "ic",
-            "_",
-            "manager",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:complaints_specialist>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "comp",
-            "lain",
-            "ts",
-            "_",
-            "specialist",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:healthcare_journalist>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "health",
-            "care",
-            "_",
-            "journalist",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:mental_health_advocate>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "mental",
-            "_",
-            "health",
-            "_",
-            "ad",
-            "vo",
-            "cate",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:ai_therapist>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "ai",
-            "_",
-            "ther",
-            "ap",
-            "ist",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:emotionally_sensitive_persona>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "e",
-            "motion",
-            "ally",
-            "_",
-            "sensitiv",
-            "e",
-            "_",
-            "person",
-            "a",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:neutral_rational_persona>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "neutral",
-            "_",
-            "ration",
-            "al",
-            "_",
-            "person",
-            "a",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:empathic_persona>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "empat",
-            "hic",
-            "_",
-            "person",
-            "a",
-            ">"
-          ]
-        }
-      ]
-    },
-    "model_report": {
-      "orig_vocab": 250002,
-      "new_vocab": 250026,
-      "new_tokens": {
-        "<lang=pl>": 250002,
-        "<lang=en>": 250003,
-        "<persona>": 250004,
-        "</persona>": 250005,
-        "<text>": 250006,
-        "</text>": 250007,
-        "<sep>": 250008,
-        "<p:senior_patient>": 250009,
-        "<p:young_mother>": 250010,
-        "<p:health_anxiety_patient>": 250011,
-        "<p:medically_educated_patient>": 250012,
-        "<p:low_education_patient>": 250013,
-        "<p:lgbtq_patient>": 250014,
-        "<p:rural_patient>": 250015,
-        "<p:young_adult_patient>": 250016,
-        "<p:supervising_physician>": 250017,
-        "<p:clinic_manager>": 250018,
-        "<p:complaints_specialist>": 250019,
-        "<p:healthcare_journalist>": 250020,
-        "<p:mental_health_advocate>": 250021,
-        "<p:ai_therapist>": 250022,
-        "<p:emotionally_sensitive_persona>": 250023,
-        "<p:neutral_rational_persona>": 250024,
-        "<p:empathic_persona>": 250025
-      },
-      "init": {
-        "<lang=pl>": {
-          "id": 250002,
-          "init": "control_random",
-          "norm": 0.5508623719215393
-        },
-        "<lang=en>": {
-          "id": 250003,
-          "init": "control_random",
-          "norm": 0.5430530309677124
-        },
-        "<persona>": {
-          "id": 250004,
-          "init": "control_random",
-          "norm": 0.5504394173622131
-        },
-        "</persona>": {
-          "id": 250005,
-          "init": "control_random",
-          "norm": 0.5740512609481812
-        },
-        "<text>": {
-          "id": 250006,
-          "init": "control_random",
-          "norm": 0.5427078604698181
-        },
-        "</text>": {
-          "id": 250007,
-          "init": "control_random",
-          "norm": 0.5725319981575012
-        },
-        "<sep>": {
-          "id": 250008,
-          "init": "control_random",
-          "norm": 0.5561785697937012
-        },
-        "<p:senior_patient>": {
-          "id": 250009,
-          "init": "avg_subwords",
-          "norm": 5.144376277923584
-        },
-        "<p:young_mother>": {
-          "id": 250010,
-          "init": "avg_subwords",
-          "norm": 4.9385600090026855
-        },
-        "<p:health_anxiety_patient>": {
-          "id": 250011,
-          "init": "avg_subwords",
-          "norm": 4.775485515594482
-        },
-        "<p:medically_educated_patient>": {
-          "id": 250012,
-          "init": "avg_subwords",
-          "norm": 5.72256326675415
-        },
-        "<p:low_education_patient>": {
-          "id": 250013,
-          "init": "avg_subwords",
-          "norm": 4.536380767822266
-        },
-        "<p:lgbtq_patient>": {
-          "id": 250014,
-          "init": "avg_subwords",
-          "norm": 5.72256326675415
-        },
-        "<p:rural_patient>": {
-          "id": 250015,
-          "init": "avg_subwords",
-          "norm": 5.149766445159912
-        },
-        "<p:young_adult_patient>": {
-          "id": 250016,
-          "init": "avg_subwords",
-          "norm": 4.7351484298706055
-        },
-        "<p:supervising_physician>": {
-          "id": 250017,
-          "init": "avg_subwords",
-          "norm": 6.177419662475586
-        },
-        "<p:clinic_manager>": {
-          "id": 250018,
-          "init": "avg_subwords",
-          "norm": 5.287963390350342
-        },
-        "<p:complaints_specialist>": {
-          "id": 250019,
-          "init": "avg_subwords",
-          "norm": 5.835561752319336
-        },
-        "<p:healthcare_journalist>": {
-          "id": 250020,
-          "init": "avg_subwords",
-          "norm": 5.79875373840332
-        },
-        "<p:mental_health_advocate>": {
-          "id": 250021,
-          "init": "avg_subwords",
-          "norm": 4.611449718475342
-        },
-        "<p:ai_therapist>": {
-          "id": 250022,
-          "init": "avg_subwords",
-          "norm": 5.127153396606445
-        },
-        "<p:emotionally_sensitive_persona>": {
-          "id": 250023,
-          "init": "avg_subwords",
-          "norm": 5.2680559158325195
-        },
-        "<p:neutral_rational_persona>": {
-          "id": 250024,
-          "init": "avg_subwords",
-          "norm": 4.991016864776611
-        },
-        "<p:empathic_persona>": {
-          "id": 250025,
-          "init": "avg_subwords",
-          "norm": 6.1143388748168945
-        }
-      }
-    }
-  },
-  {
-    "model": "xlm-roberta-base",
-    "base_model_id": "xlm-roberta-base",
-    "save_dir": "artifacts/tokenizers/xlmr-base-with-personas",
-    "added_counts": {
-      "persona_tokens": 17,
-      "control_tokens": 7,
-      "actually_single_token": 24
-    },
-    "before_unk_report": {
-      "multi_piece": 24,
-      "unk_like": 0,
-      "total": 24,
-      "details": [
-        {
-          "token": "<lang=pl>",
-          "pieces": [
-            "▁<",
-            "lang",
-            "=",
-            "pl",
-            ">"
-          ]
-        },
-        {
-          "token": "<lang=en>",
-          "pieces": [
-            "▁<",
-            "lang",
-            "=",
-            "en",
-            ">"
-          ]
-        },
-        {
-          "token": "<persona>",
-          "pieces": [
-            "▁<",
-            "person",
-            "a",
-            ">"
-          ]
-        },
-        {
-          "token": "</persona>",
-          "pieces": [
-            "▁",
-            "</",
-            "person",
-            "a",
-            ">"
-          ]
-        },
-        {
-          "token": "<text>",
-          "pieces": [
-            "▁<",
-            "text",
-            ">"
-          ]
-        },
-        {
-          "token": "</text>",
-          "pieces": [
-            "▁",
-            "</",
-            "text",
-            ">"
-          ]
-        },
-        {
-          "token": "<sep>",
-          "pieces": [
-            "▁<",
-            "sep",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:senior_patient>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "sen",
-            "ior",
-            "_",
-            "patient",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:young_mother>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "yo",
-            "ung",
-            "_",
-            "mo",
-            "ther",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:health_anxiety_patient>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "health",
-            "_",
-            "an",
-            "xie",
-            "ty",
-            "_",
-            "patient",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:medically_educated_patient>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "med",
-            "ically",
-            "_",
-            "educa",
-            "ted",
-            "_",
-            "patient",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:low_education_patient>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "low",
-            "_",
-            "educa",
-            "tion",
-            "_",
-            "patient",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:lgbtq_patient>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "lg",
-            "bt",
-            "q",
-            "_",
-            "patient",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:rural_patient>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "r",
-            "ural",
-            "_",
-            "patient",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:young_adult_patient>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "yo",
-            "ung",
-            "_",
-            "adult",
-            "_",
-            "patient",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:supervising_physician>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "super",
-            "vis",
-            "ing",
-            "_",
-            "phy",
-            "si",
-            "cian",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:clinic_manager>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "clin",
-            "ic",
-            "_",
-            "manager",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:complaints_specialist>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "comp",
-            "lain",
-            "ts",
-            "_",
-            "specialist",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:healthcare_journalist>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "health",
-            "care",
-            "_",
-            "journalist",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:mental_health_advocate>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "mental",
-            "_",
-            "health",
-            "_",
-            "ad",
-            "vo",
-            "cate",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:ai_therapist>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "ai",
-            "_",
-            "ther",
-            "ap",
-            "ist",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:emotionally_sensitive_persona>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "e",
-            "motion",
-            "ally",
-            "_",
-            "sensitiv",
-            "e",
-            "_",
-            "person",
-            "a",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:neutral_rational_persona>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "neutral",
-            "_",
-            "ration",
-            "al",
-            "_",
-            "person",
-            "a",
-            ">"
-          ]
-        },
-        {
-          "token": "<p:empathic_persona>",
-          "pieces": [
-            "▁<",
-            "p",
-            ":",
-            "empat",
-            "hic",
-            "_",
-            "person",
-            "a",
-            ">"
-          ]
-        }
-      ]
-    },
-    "model_report": {
-      "orig_vocab": 250002,
-      "new_vocab": 250026,
-      "new_tokens": {
-        "<lang=pl>": 250002,
-        "<lang=en>": 250003,
-        "<persona>": 250004,
-        "</persona>": 250005,
-        "<text>": 250006,
-        "</text>": 250007,
-        "<sep>": 250008,
-        "<p:senior_patient>": 250009,
-        "<p:young_mother>": 250010,
-        "<p:health_anxiety_patient>": 250011,
-        "<p:medically_educated_patient>": 250012,
-        "<p:low_education_patient>": 250013,
-        "<p:lgbtq_patient>": 250014,
-        "<p:rural_patient>": 250015,
-        "<p:young_adult_patient>": 250016,
-        "<p:supervising_physician>": 250017,
-        "<p:clinic_manager>": 250018,
-        "<p:complaints_specialist>": 250019,
-        "<p:healthcare_journalist>": 250020,
-        "<p:mental_health_advocate>": 250021,
-        "<p:ai_therapist>": 250022,
-        "<p:emotionally_sensitive_persona>": 250023,
-        "<p:neutral_rational_persona>": 250024,
-        "<p:empathic_persona>": 250025
-      },
-      "init": {
-        "<lang=pl>": {
-          "id": 250002,
-          "init": "control_random",
-          "norm": 0.5373719334602356
-        },
-        "<lang=en>": {
-          "id": 250003,
-          "init": "control_random",
-          "norm": 0.5631040930747986
-        },
-        "<persona>": {
-          "id": 250004,
-          "init": "control_random",
-          "norm": 0.5707448720932007
-        },
-        "</persona>": {
-          "id": 250005,
-          "init": "control_random",
-          "norm": 0.5671069025993347
-        },
-        "<text>": {
-          "id": 250006,
-          "init": "control_random",
-          "norm": 0.5689051151275635
-        },
-        "</text>": {
-          "id": 250007,
-          "init": "control_random",
-          "norm": 0.5627024173736572
-        },
-        "<sep>": {
-          "id": 250008,
-          "init": "control_random",
-          "norm": 0.5708774924278259
+          "norm": 0.5539926886558533
         },
         "<p:senior_patient>": {
           "id": 250009,
@@ -1764,9 +828,185 @@
     },
     "model_report": {
       "orig_vocab": 251000,
-      "new_vocab": 250126,
-      "new_tokens": {},
-      "init": {}
+      "new_vocab": 251000,
+      "new_tokens": {
+        "[CLS]": 1,
+        "[SEP]": 2,
+        "[UNK]": 3,
+        "[PAD]": 0,
+        "[MASK]": 250101,
+        "<lang=pl>": 250102,
+        "<lang=en>": 250103,
+        "<persona>": 250104,
+        "</persona>": 250105,
+        "<text>": 250106,
+        "</text>": 250107,
+        "<sep>": 250108,
+        "<p:senior_patient>": 250109,
+        "<p:young_mother>": 250110,
+        "<p:health_anxiety_patient>": 250111,
+        "<p:medically_educated_patient>": 250112,
+        "<p:low_education_patient>": 250113,
+        "<p:lgbtq_patient>": 250114,
+        "<p:rural_patient>": 250115,
+        "<p:young_adult_patient>": 250116,
+        "<p:supervising_physician>": 250117,
+        "<p:clinic_manager>": 250118,
+        "<p:complaints_specialist>": 250119,
+        "<p:healthcare_journalist>": 250120,
+        "<p:mental_health_advocate>": 250121,
+        "<p:ai_therapist>": 250122,
+        "<p:emotionally_sensitive_persona>": 250123,
+        "<p:neutral_rational_persona>": 250124,
+        "<p:empathic_persona>": 250125
+      },
+      "init": {
+        "[CLS]": {
+          "id": 1,
+          "init": "control_random",
+          "norm": 0.564561665058136
+        },
+        "[SEP]": {
+          "id": 2,
+          "init": "control_random",
+          "norm": 0.5859580636024475
+        },
+        "[UNK]": {
+          "id": 3,
+          "init": "control_random",
+          "norm": 0.55325847864151
+        },
+        "[PAD]": {
+          "id": 0,
+          "init": "control_random",
+          "norm": 0.5462608933448792
+        },
+        "[MASK]": {
+          "id": 250101,
+          "init": "control_random",
+          "norm": 0.5609714388847351
+        },
+        "<lang=pl>": {
+          "id": 250102,
+          "init": "control_random",
+          "norm": 0.5428818464279175
+        },
+        "<lang=en>": {
+          "id": 250103,
+          "init": "control_random",
+          "norm": 0.5455561280250549
+        },
+        "<persona>": {
+          "id": 250104,
+          "init": "control_random",
+          "norm": 0.5336230397224426
+        },
+        "</persona>": {
+          "id": 250105,
+          "init": "control_random",
+          "norm": 0.5351585149765015
+        },
+        "<text>": {
+          "id": 250106,
+          "init": "control_random",
+          "norm": 0.5507161021232605
+        },
+        "</text>": {
+          "id": 250107,
+          "init": "control_random",
+          "norm": 0.551272451877594
+        },
+        "<sep>": {
+          "id": 250108,
+          "init": "control_random",
+          "norm": 0.5553430914878845
+        },
+        "<p:senior_patient>": {
+          "id": 250109,
+          "init": "avg_subwords",
+          "norm": 2.714205503463745
+        },
+        "<p:young_mother>": {
+          "id": 250110,
+          "init": "avg_subwords",
+          "norm": 2.496077060699463
+        },
+        "<p:health_anxiety_patient>": {
+          "id": 250111,
+          "init": "avg_subwords",
+          "norm": 2.5350630283355713
+        },
+        "<p:medically_educated_patient>": {
+          "id": 250112,
+          "init": "avg_subwords",
+          "norm": 3.4158716201782227
+        },
+        "<p:low_education_patient>": {
+          "id": 250113,
+          "init": "avg_subwords",
+          "norm": 2.1449429988861084
+        },
+        "<p:lgbtq_patient>": {
+          "id": 250114,
+          "init": "avg_subwords",
+          "norm": 3.4158716201782227
+        },
+        "<p:rural_patient>": {
+          "id": 250115,
+          "init": "avg_subwords",
+          "norm": 2.7318122386932373
+        },
+        "<p:young_adult_patient>": {
+          "id": 250116,
+          "init": "avg_subwords",
+          "norm": 2.321093797683716
+        },
+        "<p:supervising_physician>": {
+          "id": 250117,
+          "init": "random_normal",
+          "norm": 0.5585901141166687
+        },
+        "<p:clinic_manager>": {
+          "id": 250118,
+          "init": "avg_subwords",
+          "norm": 2.6462862491607666
+        },
+        "<p:complaints_specialist>": {
+          "id": 250119,
+          "init": "avg_subwords",
+          "norm": 3.4797682762145996
+        },
+        "<p:healthcare_journalist>": {
+          "id": 250120,
+          "init": "avg_subwords",
+          "norm": 2.7735109329223633
+        },
+        "<p:mental_health_advocate>": {
+          "id": 250121,
+          "init": "avg_subwords",
+          "norm": 2.2664520740509033
+        },
+        "<p:ai_therapist>": {
+          "id": 250122,
+          "init": "avg_subwords",
+          "norm": 3.3638854026794434
+        },
+        "<p:emotionally_sensitive_persona>": {
+          "id": 250123,
+          "init": "avg_subwords",
+          "norm": 3.0319957733154297
+        },
+        "<p:neutral_rational_persona>": {
+          "id": 250124,
+          "init": "avg_subwords",
+          "norm": 2.466226577758789
+        },
+        "<p:empathic_persona>": {
+          "id": 250125,
+          "init": "avg_subwords",
+          "norm": 3.995279550552368
+        }
+      }
     }
   }
 ]
