@@ -1,0 +1,175 @@
+# configs/splits.yaml
+# Konfiguracja generowania splitów (train/val/test) oraz wariantów LOPO/LOLO/K-Fold.
+# Używane przez skrypt `scripts/make_splits.py` (interfejs wg tych pól).
+# Format wyjścia: CSV z JEDNĄ kolumną `id` (nagłówek obowiązkowy).
+
+version: 1
+name: dataset_splits
+description: >
+  Definicje strategii podziału danych: losowy (ze stratyfikacją), LOPO (leave-one-persona-out),
+  LOLO (leave-one-language-out) oraz K-Fold. Zapewnia spójne nazewnictwo plików i kontrole „leakage”.
+
+# ------------------------------------------------------------------------------
+# ŹRÓDŁO DANYCH DO SPLITTOWANIA
+# ------------------------------------------------------------------------------
+data_source:
+  # Możesz podać jeden scieżkę lub listę plików JSONL (każdy rekord 1 linia).
+  # Jeżeli jest lista, skrypt je scali (z kontrolą unikalności `id`).
+  files:
+    - data/processed/base/all.jsonl
+  id_field: "id"
+  persona_field: "persona_id"
+  lang_field: "lang"
+
+  # (opcjonalne) filtry przed splitem
+  filters:
+    allow_langs: ["pl", "en"]        # inne rekordy zostaną odrzucone z raportem
+    min_text_chars: 5                # zgodnie z data_base
+    require_persona_desc: true       # tylko rekordy z opisem persony w bazie
+
+  # Kontrole integralności
+  integrity_checks:
+    require_unique_ids: true
+    error_on_missing_fields: true
+
+# ------------------------------------------------------------------------------
+# ŚCIEŻKI I FORMAT WYJŚCIA
+# ------------------------------------------------------------------------------
+output:
+  splits_dir: "data/splits"
+  file_names:                         # nazwy dla wariantu random/stratified
+    train: "train_ids.csv"
+    val:   "val_ids.csv"
+    test:  "test_ids.csv"
+  format: "csv"                       # aktualnie wspieramy CSV z kolumną `id`
+  include_header: true
+  overwrite: true
+  compression: "none"                 # "none" | "gzip" (doda .gz)
+
+# ------------------------------------------------------------------------------
+# LOSOWY SPLIT (ZE STRATYFIKACJĄ)
+# ------------------------------------------------------------------------------
+random_stratified:
+  enabled: true
+  seed: 1337
+  ratios:
+    train: 0.8
+    val:   0.1
+    test:  0.1
+  # Stratyfikacja po wybranych polach (łączona krotka, np. (lang, persona_id))
+  stratify_by: ["lang", "persona_id"]
+  shuffle: true
+  ensure_min_per_split:
+    enabled: true
+    min_records: 1                    # wymuś >=1 rekord per (lang,persona) jeśli możliwe
+    on_violation: "warn"              # "warn" | "reallocate" | "ignore"
+  # Dodatkowe ważenie przy rzadkich grupach
+  reweight_minorities:
+    enabled: false
+    min_share: 0.02                   # grupy <2% dostają wagę odwrotną do udziału
+
+# ------------------------------------------------------------------------------
+# LOPO — LEAVE-ONE-PERSONA-OUT
+# Dla każdej persony P: test = {id: persona_id==P}, train/val = reszta (z opcjonalną stratyfikacją).
+# Wyniki pojawią się w: data/splits/lopo/<persona_id>/{train,val,test}.csv
+# ------------------------------------------------------------------------------
+lopo:
+  enabled: true
+  # "auto" → lista person pobrana z danych; możesz też podać jawnie listę ID.
+  personas: "auto"                    # albo: ["young_mother","student","elderly_teacher"]
+  seed: 1337
+  val_ratio_within_train: 0.1         # z puli train (wszystkie ≠ P) wydzielamy walidację
+  stratify_by: ["lang"]               # przy wydzielaniu walidacji
+  # Kontrole wielkości
+  min_test_size: 10                   # minimalna liczba rekordów dla persony w teście (inaczej -> warn)
+  write_empty_folds: false            # jeśli dana persona ma 0 rekordów → nie twórz folderu
+
+# ------------------------------------------------------------------------------
+# LOLO — LEAVE-ONE-LANGUAGE-OUT
+# Dla każdego języka L: test = {id: lang==L}, train/val = reszta.
+# Wyniki: data/splits/lolo/<lang>/{train,val,test}.csv
+# ------------------------------------------------------------------------------
+lolo:
+  enabled: true
+  langs: "auto"                       # albo: ["pl","en"]
+  seed: 1337
+  val_ratio_within_train: 0.1
+  stratify_by: ["persona_id"]
+  min_test_size: 50
+  write_empty_folds: false
+
+# ------------------------------------------------------------------------------
+# K-FOLD / STRATIFIED K-FOLD
+# Wyniki: data/splits/kfold/k=<k>/fold_<i>/{train,val}.csv  (val = fold_i, train = reszta)
+# ------------------------------------------------------------------------------
+kfold:
+  enabled: false
+  k: 5
+  seed: 1337
+  shuffle: true
+  stratified: true
+  stratify_by: ["lang", "persona_id"]
+  # Można pominąć test tutaj (zwykle K-Fold służy do CV na trainie)
+  include_test: false
+
+# ------------------------------------------------------------------------------
+# ZABEZPIECZENIA PRZED LEAKAGE I RAPORTOWANIE
+# ------------------------------------------------------------------------------
+checks_and_reports:
+  # Czy zbiory są rozłączne?
+  disjoint_sets:
+    enabled: true
+    on_violation: "error"             # "error" | "warn"
+  # Statystyki dystrybucji po grupach
+  distribution_reports:
+    enabled: true
+    group_by: ["lang", "persona_id"]
+    save_to: "reports/splits/distributions.json"
+  # Podsumowanie rozmiarów
+  size_report:
+    enabled: true
+    save_to: "reports/splits/sizes.json"
+  # Losowy podgląd ID
+  preview_ids:
+    enabled: true
+    per_split: 5
+    save_to: "reports/splits/preview_ids.json"
+  # Ziarno dla wszelkich losowań w raportach
+  report_seed: 202
+
+# ------------------------------------------------------------------------------
+# ZASADY NA WYPADEK BRAKU DANYCH DLA WYBRANEJ GRUPY
+# ------------------------------------------------------------------------------
+edge_cases:
+  empty_group_policy: "skip_with_warn" # "skip_with_warn" | "error"
+  # Jeżeli w random_stratified wyjdzie pusta walidacja/test dla którejś kombinacji,
+  # można spróbować delikatnie przeszeregować:
+  soft_rebalance:
+    enabled: true
+    max_moves: 50                      # maksymalna liczba ID, które można przenieść między splitami
+    strategy: "from_largest_split"     # "from_largest_split" | "proportional"
+
+# ------------------------------------------------------------------------------
+# INTEGRACJA Z INNYMI CONFIGAMI
+# (Skrypt może czytać te pola, aby zachować spójne klucze i walidację.)
+# ------------------------------------------------------------------------------
+integration_hints:
+  data_base_config: "configs/data_base.yaml"
+  expect_id_column_name: "id"
+  lopo_dir: "lopo"                     # podkatalog w output.splits_dir
+  lolo_dir: "lolo"
+  kfold_dir: "kfold"
+  # Nazewnictwo foldów K-Fold:
+  kfold_folder_name_format: "k={k}/fold_{i}"   # {k} = liczba foldów, {i} = indeks [0..k-1]
+
+# ------------------------------------------------------------------------------
+# LOGI I DETERMINIZM
+# ------------------------------------------------------------------------------
+logging:
+  level: "INFO"
+  # Jeżeli true, skrypt wydrukuje checksumy list ID, co pomaga sprawdzić reprodukowalność
+  print_checksums: true
+
+reproducibility:
+  global_seed: 1337
+  deterministic_ops: true

@@ -1,0 +1,175 @@
+# configs/data_base.yaml
+# WSPÓLNY KONTRAKT DANYCH dla całego projektu (źródło prawdy).
+# Używany przez widoki: data_llm.yaml i data_encoder.yaml.
+
+version: 1
+name: data_base_contract
+description: >
+  Kontrakt rekordu źródłowego + ścieżki bazowe, walidacja, filtry i metadane (etykiety, języki, persony).
+  Widoki (encoder/llm) budują własne inputy na tej bazie.
+
+# ---------------------------------------------------------------------------
+# ŚCIEŻKI I ORGANIZACJA
+# ---------------------------------------------------------------------------
+paths:
+  root: .
+  raw_dir: data/raw
+  processed_base_dir: data/processed/base        # rekordy po wspólnym preprocessie
+  personas_file: data/personas/personas.json     # kanoniczny słownik person
+  label_names_file: schema/label_names.json      # kolejność 21 etykiet
+  splits_dir: data/splits
+  reports_dir: reports/base
+
+files:
+  train: train.jsonl
+  val: val.jsonl
+  test: test.jsonl
+
+external_splits:
+  enabled: true
+  train: train_ids.csv         # pliki w paths.splits_dir; kolumna: id
+  val: val_ids.csv
+  test: test_ids.csv
+
+# ---------------------------------------------------------------------------
+# KONTRAKT REKORDU ŹRÓDŁOWEGO
+# ---------------------------------------------------------------------------
+record_schema:
+  required_fields:
+    - id
+    - text
+    - persona_id
+    - persona_desc
+    - lang
+    - labels
+  field_types:
+    id: string
+    text: string
+    persona_id: string
+    persona_desc: string
+    lang: string
+    labels: array[float]
+  constraints:
+    langs_allowed: ["pl", "en"]
+    labels_length: 21
+    labels_range: [0.0, 1.0]
+    persona_id_pattern: "^[a-z0-9_\\-]+$"
+  policies:
+    on_missing_field: "drop_with_report"     # drop_with_report | fill_defaults | error
+    on_type_mismatch: "coerce_and_report"    # spróbuj rzutować, loguj
+    on_out_of_range_label: "clamp_and_report"
+    on_bad_persona_id: "error"               # stricte wymagamy poprawnych ID
+    on_lang_not_allowed: "error"
+
+# ---------------------------------------------------------------------------
+# METADANE I LISTY DOZWOLONE
+# ---------------------------------------------------------------------------
+metadata:
+  langs: ["pl", "en"]
+  # Nazwy etykiet wczytujemy z pliku; tu fallback (opcjonalny)
+  label_names_fallback:
+    - positive
+    - negative
+    - happiness
+    - delight
+    - inspiring
+    - calm
+    - surprise
+    - compassion
+    - fear
+    - sadness
+    - disgust
+    - anger
+    - ironic
+    - embarassing
+    - vulgar
+    - political
+    - interesting
+    - understandable
+    - more
+    - offensive
+    - funny
+  # (opcjonalnie) minimalny słownik person do sanity-checku;
+  # pełna lista pochodzi z personas_file
+  personas_min_examples:
+    - young_mother
+    - student
+    - elderly_teacher
+
+# ---------------------------------------------------------------------------
+# FILTRY I NORMALIZACJE
+# ---------------------------------------------------------------------------
+filters:
+  text_min_chars: 5
+  text_max_chars: 4000
+  allow_empty_persona_desc: false         # w bazie chcemy mieć opis; widoki mogą go ignorować
+  normalize_text:
+    strip: true
+    collapse_spaces: true
+    normalize_quotes: true
+  deduplication:
+    enabled: true
+    scope: "within-split"                 # within-split | global
+    key: "text"
+    normalization:
+      lower: true
+      strip: true
+      collapse_spaces: true
+
+# ---------------------------------------------------------------------------
+# BALANS I STRATYFIKACJA (na potrzeby tworzenia splitów lub sanity-checku)
+# ---------------------------------------------------------------------------
+balancing:
+  by_lang:
+    enabled: true
+    target_dist:
+      pl: 0.5
+      en: 0.5
+    tolerance: 0.05
+  by_persona:
+    enabled: true
+    min_per_persona: 20
+    max_per_persona: 100000
+    strategy: "clip_and_reweight"
+
+stratification:
+  default_keys: ["lang", "persona_id"]
+
+# ---------------------------------------------------------------------------
+# VALIDATION REPORTS
+# ---------------------------------------------------------------------------
+reports:
+  write_schema_violations: true
+  write_balance_stats: true
+  write_label_range_issues: true
+  sample_preview:
+    enabled: true
+    per_split: 3
+    output: "reports/base/preview_examples.jsonl"
+
+# ---------------------------------------------------------------------------
+# AUGMENTACJE (globalne wytyczne; widoki mogą to nadpisać)
+# ---------------------------------------------------------------------------
+augmentation:
+  enabled: false
+  methods:
+    backtranslation:
+      enabled: false
+      langs: ["pl", "en"]
+      probability: 0.1
+    paraphrase:
+      enabled: false
+      probability: 0.1
+  apply_to:
+    text: true
+    persona_desc: false
+
+# ---------------------------------------------------------------------------
+# REPRODUKCJA I LOGI
+# ---------------------------------------------------------------------------
+reproducibility:
+  seed: 1337
+  deterministic_ops: true
+
+logging:
+  level: "INFO"

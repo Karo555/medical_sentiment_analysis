@@ -8,5 +8,7 @@ dependencies = [
     "pyyaml",
     "jsonschema",
     "transformers",
-    "torch"
+    "torch",
+    "pandas",
+    "scikit-learn"
 ]
