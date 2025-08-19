@@ -11,6 +11,12 @@ LLM_MODE ?= personalized_desc  # non_personalized | persona_token | personalized
 CHECKPOINT ?= artifacts/models/encoder/enc_baseline_xlmr
 EVAL_SPLIT ?= val  # val | test
 
+CALIB_LABELS ?=
+TOPK_ECE ?=
+CALIB_BINS ?= 15
+CALIB_STRATEGY ?= uniform
+CALIB_DPI ?= 140
+
 # ===== Phony =====
 .PHONY: help preview-base preview-llm preview-enc preview-enc-tokenize \
         prepare-data prepare-data-with-id make-splits \
@@ -94,3 +100,17 @@ eval-enc:
 
 eval-enc-test:
 	$(PY) scripts/eval_encoder.py --config configs/experiment/enc_baseline.yaml --split test --checkpoint $(CHECKPOINT)
+
+calib-enc:
+	$(PY) scripts/plot_calibration.py \
+		--checkpoint $(CHECKPOINT) \
+		--split $(EVAL_SPLIT) \
+		--label-names schema/label_names.json \
+		--bins $(CALIB_BINS) \
+		--strategy $(CALIB_STRATEGY) \
+		$(if $(CALIB_LABELS),--labels $(CALIB_LABELS),) \
+		$(if $(TOPK_ECE),--topk-ece $(TOPK_ECE),) \
+		--dpi $(CALIB_DPI)
+
+check-splits:
+	$(PY) scripts/check_splits.py --all data/processed/base/all.jsonl --splits-dir data/splits
