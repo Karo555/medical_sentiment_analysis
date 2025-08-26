@@ -1,4 +1,6 @@
 # ===== Variables =====
+PY ?= python
+export PYTHONPATH := .
 PY := python
 CONFIG_BASE := configs/data_base.yaml
 CONFIG_LLM  := configs/data_llm.yaml
@@ -114,3 +116,53 @@ calib-enc:
 
 check-splits:
 	$(PY) scripts/check_splits.py --all data/processed/base/all.jsonl --splits-dir data/splits
+
+# ── Train presets ────────────────────────────────────────────────────────────
+train-enc-persona-token-xlmr:
+	$(PY) scripts/train_encoder.py --config configs/experiment/enc_persona_token_xlmr.yaml
+
+train-enc-personalized-xlmr:
+	$(PY) scripts/train_encoder.py --config configs/experiment/enc_personalized_desc_xlmr.yaml
+
+train-enc-persona-token-mdeberta:
+	$(PY) scripts/train_encoder.py --config configs/experiment/enc_persona_token_mdeberta.yaml
+
+train-enc-personalized-mdeberta:
+	$(PY) scripts/train_encoder.py --config configs/experiment/enc_personalized_desc_mdeberta.yaml
+
+# ── Eval presets (val domyślnie) ─────────────────────────────────────────────
+# Ustaw zmienne środowiskowe, jeśli chcesz inny split/checkpoint.
+EVAL_SPLIT ?= val
+
+eval-enc-persona-token-xlmr:
+	CHECKPOINT=artifacts/models/encoder/enc_persona_token_xlmr \
+	$(PY) scripts/eval_encoder.py --config configs/experiment/enc_persona_token_xlmr.yaml --split $(EVAL_SPLIT) --checkpoint $$CHECKPOINT
+
+eval-enc-personalized-xlmr:
+	CHECKPOINT=artifacts/models/encoder/enc_personalized_desc_xlmr \
+	$(PY) scripts/eval_encoder.py --config configs/experiment/enc_personalized_desc_xlmr.yaml --split $(EVAL_SPLIT) --checkpoint $$CHECKPOINT
+
+eval-enc-persona-token-mdeberta:
+	CHECKPOINT=artifacts/models/encoder/enc_persona_token_mdeberta \
+	$(PY) scripts/eval_encoder.py --config configs/experiment/enc_persona_token_mdeberta.yaml --split $(EVAL_SPLIT) --checkpoint $$CHECKPOINT
+
+eval-enc-personalized-mdeberta:
+	CHECKPOINT=artifacts/models/encoder/enc_personalized_desc_mdeberta \
+	$(PY) scripts/eval_encoder.py --config configs/experiment/enc_personalized_desc_mdeberta.yaml --split $(EVAL_SPLIT) --checkpoint $$CHECKPOINT
+
+# ── Calibration (opcjonalnie) ────────────────────────────────────────────────
+calib-enc-persona-token-xlmr:
+	CHECKPOINT=artifacts/models/encoder/enc_persona_token_xlmr \
+	$(MAKE) calib-enc
+
+calib-enc-personalized-xlmr:
+	CHECKPOINT=artifacts/models/encoder/enc_personalized_desc_xlmr \
+	$(MAKE) calib-enc
+
+calib-enc-persona-token-mdeberta:
+	CHECKPOINT=artifacts/models/encoder/enc_persona_token_mdeberta \
+	$(MAKE) calib-enc
+
+calib-enc-personalized-mdeberta:
+	CHECKPOINT=artifacts/models/encoder/enc_personalized_desc_mdeberta \
+	$(MAKE) calib-enc

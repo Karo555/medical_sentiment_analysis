@@ -1,27 +1,20 @@
 {
   "random": {
-    "train": 775,
-    "val": 97,
-    "test": 97
+    "train": 7959,
+    "val": 996,
+    "test": 995
   },
   "lopo": {
-    "ai_therapist": 3,
-    "clinic_manager": 3,
-    "complaints_specialist": 3,
-    "emotionally_sensitive_persona": 3,
-    "empathic_persona": 3,
-    "health_anxiety_patient": 3,
-    "healthcare_journalist": 3,
-    "lgbtq_patient": 3,
-    "low_education_patient": 3,
-    "medically_educated_patient": 3,
-    "mental_health_advocate": 3,
-    "neutral_rational_persona": 3,
-    "rural_patient": 3,
-    "senior_patient": 3,
-    "supervising_physician": 3,
-    "young_adult_patient": 3,
-    "young_mother": 3
+    "person_1": 3,
+    "person_10": 3,
+    "person_2": 3,
+    "person_3": 3,
+    "person_4": 3,
+    "person_5": 3,
+    "person_6": 3,
+    "person_7": 3,
+    "person_8": 3,
+    "person_9": 3
   },
   "lolo": {
     "en": 3,

@@ -90,7 +90,30 @@ prompt:
 
   # Instrukcje bazowe (możesz edytować style)
   system_prefix: |
-    Instruction: Based on the REVIEW TEXT and (if provided) the PERSON description, predict 21 values in [0,1].
+    Instruction: 
+    Based on the REVIEW TEXT and (if provided) the PERSON description, predict 21 values of emotions:
+    {Positive",
+      "Negative",
+      "Happiness",
+      "Delight",
+      "Inspiring",
+      "Calm",
+      "Surprise",
+      "Compassion",
+      "Fear",
+      "Sadness",
+      "Disgust",
+      "Anger",
+      "Ironic",
+      "Embarrassing",
+      "Vulgar",
+      "Political",
+      "Interesting",
+      "Understandable",
+      "More",
+      "Offensive",
+      "Funny"}
+    annotating with 1 if emotion is present or 0 if it is not.
     Return EXACT JSON: {"labels":[f1,...,f21]} with 21 numbers in [0,1]. No extra text.
 
   # Tryby personalizacji budujące input_text.

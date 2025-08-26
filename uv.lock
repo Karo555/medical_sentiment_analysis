@@ -291,7 +291,7 @@ requires-dist = [
     { name = "sentencepiece" },
     { name = "tiktoken" },
     { name = "torch" },
-    { name = "transformers" },
+    { name = "transformers", specifier = ">=4.44" },
     { name = "transformers", extras = ["sentencepiece"] },
 ]
 

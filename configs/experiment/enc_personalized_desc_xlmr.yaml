@@ -1,0 +1,52 @@
+seed: 1337
+
+paths:
+  encoder_view_dir: data/processed/encoder
+  reports_dir: reports/encoder
+
+files:
+  train: train.jsonl
+  val: val.jsonl
+  test: test.jsonl
+
+tokenizer:
+  # potrzebne <persona> i </persona> też są w tym artefakcie
+  path_or_name: artifacts/tokenizers/xlmr-base-with-personas
+  use_fast: false
+
+model:
+  name_or_path: xlm-roberta-base
+  out_dim: 21
+  dropout: 0.1
+  use_fast_pooler: true
+
+data:
+  max_length: 320        # opis persony trochę wydłuża sekwencję
+  label_dim: 21
+  clamp_labels_to: [0.0, 1.0]
+  return_meta: true
+
+collate:
+  pad_to_multiple_of: 8
+  pass_meta_keys: ["id","lang","persona_id"]
+
+training:
+  output_dir: artifacts/models/encoder/enc_personalized_desc_xlmr
+  epochs: 3
+  lr: 5.0e-5
+  weight_decay: 0.01
+  train_bs: 16
+  eval_bs: 32
+  grad_accum: 1
+  warmup_ratio: 0.1
+  evaluation_strategy: "epoch"
+  save_strategy: "epoch"
+  load_best_at_end: true
+  metric_for_best_model: "r2"
+  greater_is_better: true
+  logging_steps: 50
+  fp16: false
+  bf16: false
+  report_to: ["none"]
+  save_total_limit: 2
+  num_workers: 2
