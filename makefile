@@ -44,6 +44,14 @@ help:
 	@echo "train-llm-baseline-gemma2      - train Gemma2-2B baseline (non-personalized)"
 	@echo "train-llm-persona-token-mistral - train Mistral-7B with persona tokens"
 	@echo "train-llm-personalized-desc-qwen2 - train Qwen2-1.5B with persona descriptions"
+	@echo "train-llm-gemma2-27b-personalized - train Gemma2-27B-IT with persona descriptions"
+	@echo ""
+	@echo "=== LLM Evaluation and Workflow ==="
+	@echo "workflow-gemma2-27b-complete   - complete Gemma2-27B workflow (eval + train + viz + compare)"
+	@echo "workflow-gemma2-27b-quick      - quick Gemma2-27B workflow (fewer evaluation samples)"
+	@echo "eval-llm-gemma2-baseline       - evaluate baseline Gemma2-27B model"
+	@echo "eval-llm-gemma2-trained        - evaluate fine-tuned Gemma2-27B model"
+	@echo "visualize-llm-training         - visualize training curves (set CHECKPOINT=path)"
 
 # ===== Previews / smoke tests =====
 preview-base:
@@ -197,3 +205,28 @@ train-llm-persona-token-mistral:
 
 train-llm-personalized-desc-qwen2:
 	$(PY) scripts/train_llm.py --config configs/experiment/llm_personalized_desc_qwen2.yaml
+
+#done
+train-llm-gemma2-27b-personalized:
+	$(PY) scripts/train_llm.py --config configs/experiment/llm_gemma3_12b_personalized.yaml
+
+# ── LLM Evaluation ──────────────────────────────────────────────────────────
+eval-llm-baseline:
+	$(PY) scripts/eval_llm.py --config $(CONFIG) --split val --max-samples 100
+
+#done
+eval-llm-gemma2-baseline:
+	$(PY) scripts/eval_llm.py --config configs/experiment/llm_gemma3_12b_personalized.yaml --split val --output-dir artifacts/models/llm/llm_gemma2_27b_personalized/eval_baseline
+
+eval-llm-gemma2-trained:
+	$(PY) scripts/eval_llm.py --config configs/experiment/llm_gemma3_12b_personalized.yaml --split val --checkpoint artifacts/models/llm/llm_gemma2_27b_personalized --output-dir artifacts/models/llm/llm_gemma2_27b_personalized/eval_trained
+
+# ── Complete LLM Workflows ──────────────────────────────────────────────────
+workflow-gemma2-27b-complete:
+	$(PY) scripts/full_llm_workflow.py --config configs/experiment/llm_gemma3_12b_personalized.yaml
+
+workflow-gemma2-27b-quick:
+	PYTHONPATH=/workspace/medical_sentiment_analysis $(PY) scripts/full_llm_workflow.py --config configs/experiment/llm_gemma3_12b_personalized.yaml --quick-eval
+
+visualize-llm-training:
+	$(PY) scripts/visualize_llm_training.py --checkpoint $(CHECKPOINT)
