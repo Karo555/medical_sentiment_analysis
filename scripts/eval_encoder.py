@@ -52,11 +52,22 @@ def safe_resize_up_only(model: EncoderRegressor, tokenizer):
 
 
 def load_checkpoint_weights(model: EncoderRegressor, ckpt_dir: Path):
-    """Wczytuje pytorch_model.bin zapisany przez HF Trainer."""
+    """Load model weights from either pytorch_model.bin or model.safetensors."""
     bin_path = ckpt_dir / "pytorch_model.bin"
-    if not bin_path.is_file():
-        raise FileNotFoundError(f"Checkpoint not found: {bin_path}")
-    state = torch.load(bin_path, map_location="cpu")
+    safetensors_path = ckpt_dir / "model.safetensors"
+    
+    if safetensors_path.is_file():
+        # Use safetensors if available
+        from safetensors.torch import load_file
+        state = load_file(safetensors_path, device="cpu")
+        print(f"Loading weights from: {safetensors_path}")
+    elif bin_path.is_file():
+        # Fallback to pytorch_model.bin
+        state = torch.load(bin_path, map_location="cpu")
+        print(f"Loading weights from: {bin_path}")
+    else:
+        raise FileNotFoundError(f"No checkpoint found: tried {bin_path} and {safetensors_path}")
+    
     missing, unexpected = model.load_state_dict(state, strict=False)
     if missing:
         print(f"[WARN] Missing keys while loading: {missing[:10]}{'...' if len(missing)>10 else ''}")
@@ -65,9 +76,9 @@ def load_checkpoint_weights(model: EncoderRegressor, ckpt_dir: Path):
 
 
 @torch.no_grad()
-def run_inference(model: EncoderRegressor, loader: DataLoader, device: torch.device) -> Tuple[np.ndarray, np.ndarray, List[str]]:
+def run_inference(model: EncoderRegressor, loader: DataLoader, device: torch.device) -> Tuple[np.ndarray, np.ndarray, List[Dict[str, Any]]]:
     model.eval()
-    preds_list, labels_list, ids = [], [], []
+    preds_list, labels_list, metadata = [], [], []
     for batch in loader:
         input_ids = batch["input_ids"].to(device)
         attention_mask = batch["attention_mask"].to(device)
@@ -77,12 +88,22 @@ def run_inference(model: EncoderRegressor, loader: DataLoader, device: torch.dev
         logits = out["logits"]
         preds_list.append(logits.detach().cpu().numpy())
         labels_list.append(labels.detach().cpu().numpy())
-        # meta ids (opcjonalnie)
-        if "id" in batch:
-            ids.extend(batch["id"])
+        
+        # Extract metadata for analysis
+        batch_size = input_ids.shape[0]
+        for i in range(batch_size):
+            meta_item = {}
+            if "id" in batch:
+                meta_item["id"] = batch["id"][i] if i < len(batch["id"]) else str(len(metadata))
+            if "lang" in batch:
+                meta_item["lang"] = batch["lang"][i] if i < len(batch["lang"]) else "unknown"
+            if "persona_id" in batch:
+                meta_item["persona_id"] = batch["persona_id"][i] if i < len(batch["persona_id"]) else "unknown"
+            metadata.append(meta_item)
+            
     y_pred = np.concatenate(preds_list, axis=0) if preds_list else np.zeros((0, 21))
     y_true = np.concatenate(labels_list, axis=0) if labels_list else np.zeros((0, 21))
-    return y_true, y_pred, ids
+    return y_true, y_pred, metadata
 
 
 def main():
@@ -154,7 +175,7 @@ def main():
     loader = DataLoader(ds, batch_size=eval_bs, shuffle=False, num_workers=num_workers, collate_fn=collate)
 
     # inference
-    y_true, y_pred, ids = run_inference(model, loader, device)
+    y_true, y_pred, metadata = run_inference(model, loader, device)
 
     # metrics
     metrics = compute_all_metrics(y_true, y_pred)
@@ -167,11 +188,24 @@ def main():
     (out_dir / "metrics.json").write_text(json.dumps(metrics, indent=2), encoding="utf-8")
     # predykcje + prawdy (lekko skompresowane)
     np.savez_compressed(out_dir / "preds_labels.npz", y_pred=y_pred, y_true=y_true)
+    
+    # Save results in format expected by analysis script
+    results_for_analysis = {
+        "predictions": y_pred.tolist(),
+        "labels": y_true.tolist(),
+        "metadata": metadata,
+        "metrics": metrics
+    }
+    results_file = ckpt_dir / f"eval_results_{args.split}.json"
+    with results_file.open("w", encoding="utf-8") as f:
+        json.dump(results_for_analysis, f, indent=2, ensure_ascii=False)
+    
     # (opcjonalnie) jsonl z id i predykcją – pomocne do debug
     preds_jsonl = out_dir / "preds.jsonl"
     with preds_jsonl.open("w", encoding="utf-8") as f:
         for i, row in enumerate(y_pred):
-            rec = {"id": ids[i] if i < len(ids) else str(i), "pred": row.tolist()}
+            meta_id = metadata[i].get("id", str(i)) if i < len(metadata) else str(i)
+            rec = {"id": meta_id, "pred": row.tolist()}
             f.write(json.dumps(rec, ensure_ascii=False) + "\n")
 
     # konsola – krótkie podsumowanie

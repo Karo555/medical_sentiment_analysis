@@ -67,15 +67,27 @@ def load_llm_model(
         }
         torch_dtype_obj = dtype_mapping.get(torch_dtype, torch.float16)
     
-    model = AutoModelForCausalLM.from_pretrained(
-        model_name_or_path,
-        torch_dtype=torch_dtype_obj,
-        device_map=device_map,
-        quantization_config=quantization_config,
-        trust_remote_code=trust_remote_code,
-        use_flash_attention_2=use_flash_attention,
-        attn_implementation="flash_attention_2" if use_flash_attention else None,
-    )
+    # Build model loading kwargs
+    model_kwargs = {
+        "torch_dtype": torch_dtype_obj,
+        "device_map": device_map,
+        "quantization_config": quantization_config,
+        "trust_remote_code": trust_remote_code,
+    }
+    
+    # Add flash attention only if supported
+    if use_flash_attention:
+        try:
+            # Try with attn_implementation first (newer approach)
+            model_kwargs["attn_implementation"] = "flash_attention_2"
+        except:
+            try:
+                # Fallback to use_flash_attention_2 parameter
+                model_kwargs["use_flash_attention_2"] = True
+            except:
+                print("[WARNING] Flash attention requested but not supported, continuing without it")
+    
+    model = AutoModelForCausalLM.from_pretrained(model_name_or_path, **model_kwargs)
     
     return model
 
@@ -85,6 +97,15 @@ def apply_lora_to_model(
     lora_config: Dict[str, Any],
 ) -> PreTrainedModel:
     """Apply LoRA (Low-Rank Adaptation) to the model."""
+    from peft import prepare_model_for_kbit_training
+    
+    # Check if model is quantized (4-bit or 8-bit)
+    is_quantized = getattr(model, "is_loaded_in_8bit", False) or getattr(model, "is_loaded_in_4bit", False)
+    
+    # Prepare model for k-bit training if using quantization
+    if is_quantized:
+        print("[INFO] Model is quantized, preparing for k-bit training...")
+        model = prepare_model_for_kbit_training(model)
     
     peft_config = LoraConfig(
         task_type=TaskType.CAUSAL_LM,
@@ -158,6 +179,71 @@ class LLMTrainer(Trainer):
             "temperature": 0.7,
             "pad_token_id": self.tokenizer.pad_token_id,
         }
+        self.step_count = 0
+        self.last_log_time = None
+        
+    def log(self, logs: Dict[str, float]) -> None:
+        """Override log method to add custom logging."""
+        # Add step information
+        if self.state.global_step != self.step_count:
+            self.step_count = self.state.global_step
+            
+        # Add timing information
+        import time
+        current_time = time.time()
+        if self.last_log_time is not None:
+            time_per_step = (current_time - self.last_log_time) / max(1, self.args.logging_steps)
+            logs["seconds_per_step"] = time_per_step
+            
+            # Estimate remaining time
+            if hasattr(self.state, 'max_steps') and self.state.max_steps > 0:
+                remaining_steps = self.state.max_steps - self.state.global_step
+                remaining_time_hours = (remaining_steps * time_per_step) / 3600
+                logs["estimated_remaining_hours"] = remaining_time_hours
+        
+        self.last_log_time = current_time
+        
+        # Enhanced logging output
+        if logs:
+            print(f"\n[TRAINING] Step {self.state.global_step:,}")
+            for key, value in logs.items():
+                if isinstance(value, (int, float)):
+                    if 'loss' in key.lower():
+                        print(f"[TRAINING]   {key}: {value:.4f}")
+                    elif 'lr' in key.lower() or 'learning_rate' in key.lower():
+                        print(f"[TRAINING]   {key}: {value:.2e}")
+                    elif 'time' in key.lower() or 'seconds' in key.lower():
+                        print(f"[TRAINING]   {key}: {value:.3f}")
+                    elif 'hours' in key.lower():
+                        print(f"[TRAINING]   {key}: {value:.2f}h")
+                    elif 'epoch' in key.lower():
+                        print(f"[TRAINING]   {key}: {value:.2f}")
+                    else:
+                        print(f"[TRAINING]   {key}: {value:.4f}")
+        
+        super().log(logs)
+        
+    def _maybe_log_save_evaluate(self, tr_loss, model, trial, epoch, ignore_keys_for_eval):
+        """Override to add evaluation progress tracking."""
+        if self.control.should_evaluate:
+            print(f"\n[EVALUATION] Starting evaluation at step {self.state.global_step}")
+            
+        result = super()._maybe_log_save_evaluate(tr_loss, model, trial, epoch, ignore_keys_for_eval)
+        
+        if self.control.should_evaluate:
+            print(f"[EVALUATION] ✅ Evaluation completed at step {self.state.global_step}")
+            if hasattr(self.state, 'log_history') and self.state.log_history:
+                latest_eval = self.state.log_history[-1]
+                if any(k.startswith('eval_') for k in latest_eval.keys()):
+                    print("[EVALUATION] Results:")
+                    for key, value in latest_eval.items():
+                        if key.startswith('eval_') and isinstance(value, (int, float)):
+                            print(f"[EVALUATION]   {key}: {value:.4f}")
+                            
+        if self.control.should_save:
+            print(f"[CHECKPOINT] Model saved at step {self.state.global_step}")
+            
+        return result
     
     def compute_metrics_for_generation(self, eval_dataset, eval_predictions=None):
         """
