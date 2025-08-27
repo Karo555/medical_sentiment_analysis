@@ -14,5 +14,6 @@ dependencies = [
     "tiktoken",
     "protobuf",
     "sentencepiece",
-    "transformers[sentencepiece]"
+    "transformers[sentencepiece]",
+    "accelerate>=1.10.1",
 ]

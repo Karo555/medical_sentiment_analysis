@@ -35,7 +35,7 @@ def build_trainer(model, tokenizer, train_ds, val_ds, training_cfg: Dict[str, An
         per_device_train_batch_size=int(training_cfg.get("train_bs", 16)),
         per_device_eval_batch_size=int(training_cfg.get("eval_bs", 32)),
         gradient_accumulation_steps=int(training_cfg.get("grad_accum", 1)),
-        evaluation_strategy=eval_strat,
+        eval_strategy=eval_strat,
         save_strategy=save_strat,
         load_best_model_at_end=load_best,
         metric_for_best_model=training_cfg.get("metric_for_best_model", "r2"),
@@ -62,7 +62,7 @@ def build_trainer(model, tokenizer, train_ds, val_ds, training_cfg: Dict[str, An
     kwargs = {k: v for k, v in base_kwargs.items() if k in supported}
 
     # fallback dla starych HF: evaluate_during_training / save_steps
-    if "evaluation_strategy" not in supported and "evaluate_during_training" in supported:
+    if "eval_strategy" not in supported and "evaluate_during_training" in supported:
         kwargs["evaluate_during_training"] = (eval_strat != "no")
         if eval_strat == "steps" and "eval_steps" in supported:
             kwargs["eval_steps"] = int(base_kwargs.get("eval_steps", 50))
