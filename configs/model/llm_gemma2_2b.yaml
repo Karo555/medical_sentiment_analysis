@@ -1,0 +1,26 @@
+# configs/model/llm_gemma2_2b.yaml
+# Google Gemma 2 2B model configuration for medical sentiment analysis
+
+model:
+  name_or_path: "google/gemma-2-2b"
+  use_flash_attention: true
+  torch_dtype: "bfloat16"
+  device_map: "auto"
+  use_4bit: false
+  use_8bit: false
+  trust_remote_code: true
+
+tokenizer:
+  path_or_name: "google/gemma-2-2b"
+  use_fast: true
+  padding_side: "left"  # Important for causal LM
+
+# LoRA configuration (optional)
+lora:
+  enabled: false
+  r: 16
+  lora_alpha: 32
+  lora_dropout: 0.1
+  target_modules: ["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+  bias: "none"
+  modules_to_save: null

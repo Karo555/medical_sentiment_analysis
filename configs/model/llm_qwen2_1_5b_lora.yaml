@@ -1,0 +1,26 @@
+# configs/model/llm_qwen2_1_5b_lora.yaml
+# Qwen2 1.5B with LoRA configuration for medical sentiment analysis
+
+model:
+  name_or_path: "Qwen/Qwen2-1.5B"
+  use_flash_attention: true
+  torch_dtype: "bfloat16"
+  device_map: "auto"
+  use_4bit: true
+  use_8bit: false
+  trust_remote_code: true
+
+tokenizer:
+  path_or_name: "Qwen/Qwen2-1.5B"
+  use_fast: true
+  padding_side: "left"
+
+# LoRA configuration
+lora:
+  enabled: true
+  r: 32
+  lora_alpha: 64
+  lora_dropout: 0.1
+  target_modules: ["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+  bias: "none"
+  modules_to_save: null

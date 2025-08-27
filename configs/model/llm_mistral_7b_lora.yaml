@@ -1,0 +1,26 @@
+# configs/model/llm_mistral_7b_lora.yaml
+# Mistral 7B v0.3 with LoRA configuration for medical sentiment analysis
+
+model:
+  name_or_path: "mistralai/Mistral-7B-v0.3"
+  use_flash_attention: true
+  torch_dtype: "bfloat16"
+  device_map: "auto"
+  use_4bit: true  # Essential for 7B models on consumer GPUs
+  use_8bit: false
+  trust_remote_code: false
+
+tokenizer:
+  path_or_name: "mistralai/Mistral-7B-v0.3"
+  use_fast: true
+  padding_side: "left"
+
+# LoRA configuration optimized for 7B models
+lora:
+  enabled: true
+  r: 64  # Higher rank for larger model
+  lora_alpha: 128
+  lora_dropout: 0.1
+  target_modules: ["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+  bias: "none"
+  modules_to_save: null

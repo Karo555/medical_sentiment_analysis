@@ -24,6 +24,7 @@ CALIB_DPI ?= 140
         prepare-data prepare-data-with-id make-splits \
         build-enc-view build-enc-nonpers build-enc-persona-token build-enc-personalized \
 		build-llm-view build-llm-nonpers build-llm-persona-token build-llm-personalized-desc build-llm-personalized-instruction \
+		train-llm-baseline-gemma2 train-llm-persona-token-mistral train-llm-personalized-desc-qwen2 \
 		eval-enc eval-enc-test
 
 help:
@@ -38,6 +39,11 @@ help:
 	@echo "build-enc-nonpers         - widok encodera (non_personalized)"
 	@echo "build-enc-persona-token   - widok encodera (persona_token)"
 	@echo "build-enc-personalized    - widok encodera (personalized_desc)"
+	@echo ""
+	@echo "=== LLM Training ==="
+	@echo "train-llm-baseline-gemma2      - train Gemma2-2B baseline (non-personalized)"
+	@echo "train-llm-persona-token-mistral - train Mistral-7B with persona tokens"
+	@echo "train-llm-personalized-desc-qwen2 - train Qwen2-1.5B with persona descriptions"
 
 # ===== Previews / smoke tests =====
 preview-base:
@@ -166,3 +172,28 @@ calib-enc-persona-token-mdeberta:
 calib-enc-personalized-mdeberta:
 	CHECKPOINT=artifacts/models/encoder/enc_personalized_desc_mdeberta \
 	$(MAKE) calib-enc
+
+# ── Visualization and Analysis ──────────────────────────────────────────────
+visualize-training:
+	$(PY) scripts/visualize_training.py --checkpoint $(CHECKPOINT) --label-names schema/label_names.json
+
+analyze-results:
+	$(PY) scripts/analyze_results.py --checkpoint $(CHECKPOINT) --split $(EVAL_SPLIT) --label-names schema/label_names.json
+
+visualize-enc-persona-token-xlmr:
+	CHECKPOINT=artifacts/models/encoder/enc_persona_token_xlmr \
+	$(MAKE) visualize-training
+
+analyze-enc-persona-token-xlmr:
+	CHECKPOINT=artifacts/models/encoder/enc_persona_token_xlmr \
+	$(MAKE) analyze-results
+
+# ── LLM Training ─────────────────────────────────────────────────────────────
+train-llm-baseline-gemma2:
+	$(PY) scripts/train_llm.py --config configs/experiment/llm_baseline_gemma2.yaml
+
+train-llm-persona-token-mistral:
+	$(PY) scripts/train_llm.py --config configs/experiment/llm_persona_token_mistral.yaml
+
+train-llm-personalized-desc-qwen2:
+	$(PY) scripts/train_llm.py --config configs/experiment/llm_personalized_desc_qwen2.yaml

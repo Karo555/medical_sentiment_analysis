@@ -1,0 +1,90 @@
+# configs/experiment/llm_baseline_gemma2.yaml
+# Baseline LLM training with Gemma2 2B, non-personalized mode
+
+seed: 1337
+
+# Model configuration (Gemma2 2B with LoRA)
+model:
+  name_or_path: "google/gemma-2-2b"
+  use_flash_attention: true
+  torch_dtype: "bfloat16"
+  device_map: "auto"
+  use_4bit: true  # Enable 4-bit quantization for memory efficiency with LoRA
+  use_8bit: false
+  trust_remote_code: true
+  
+  # LoRA configuration
+  lora:
+    enabled: true
+    r: 16
+    lora_alpha: 32
+    lora_dropout: 0.1
+    target_modules: ["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+    bias: "none"
+    modules_to_save: null
+
+tokenizer:
+  path_or_name: "google/gemma-2-2b"
+  use_fast: true
+  padding_side: "left"
+
+paths:
+  llm_view_dir: data/processed/llm
+  reports_dir: reports/llm
+
+files:
+  train: train.jsonl
+  val: val.jsonl
+  test: test.jsonl
+
+data:
+  max_length: 1024
+  return_meta: true
+  tokenize_target: true
+  parse_labels_from_json: true
+  clamp_labels_to: [0.0, 1.0]
+
+collate:
+  pad_to_multiple_of: 8
+  join_input_target: true  # Needed for causal LM training
+  label_pad_id: -100
+  max_combined_length: 2048
+  pass_meta_keys: ["id", "lang", "persona_id"]
+
+training:
+  output_dir: artifacts/models/llm/llm_baseline_gemma2_2b
+  epochs: 3
+  lr: 1.0e-4  # Lower learning rate for LLMs
+  weight_decay: 0.01
+  train_bs: 1  # Small batch size for LLMs
+  eval_bs: 1
+  grad_accum: 8  # Higher gradient accumulation to simulate larger batches
+  warmup_ratio: 0.03  # Lower warmup for LLMs
+  evaluation_strategy: "steps"
+  save_strategy: "steps"
+  eval_steps: 500
+  save_steps: 500
+  load_best_at_end: true
+  metric_for_best_model: "eval_loss"
+  greater_is_better: false  # Lower loss is better
+  logging_steps: 10
+  fp16: false
+  bf16: true  # Prefer bf16 for LLMs
+  report_to: ["none"]
+  save_total_limit: 2
+  num_workers: 0  # Often 0 for LLMs to avoid issues
+  gradient_checkpointing: true  # Save memory
+  remove_unused_columns: false
+  prediction_loss_only: false
+  
+  # Freezing options (optional)
+  freeze:
+    embeddings: false
+    layers: []  # List of layer indices to freeze, e.g. [0, 1, 2]
+  
+  # Generation-based evaluation (expensive, use sparingly)
+  eval_generation:
+    enabled: false  # Set to true for generation-based metrics
+    max_new_tokens: 100
+    do_sample: false
+    temperature: 0.7
