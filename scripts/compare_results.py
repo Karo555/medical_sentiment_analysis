@@ -22,7 +22,47 @@ import numpy as np
 def load_results(path: Path) -> Dict[str, Any]:
     """Load evaluation results from JSON file."""
     with path.open("r", encoding="utf-8") as f:
-        return json.load(f)
+        results = json.load(f)
+    
+    # Try to load companion metrics file if main file lacks detailed metrics
+    if "metrics" not in results or not any(k.startswith("per_label_") for k in results.get("metrics", {})):
+        # Check for companion metrics.json in same directory
+        metrics_path = path.parent / "metrics.json"
+        if metrics_path.exists():
+            with metrics_path.open("r", encoding="utf-8") as f:
+                metrics = json.load(f)
+                if "metrics" in results:
+                    results["metrics"].update(metrics)
+                else:
+                    results["metrics"] = metrics
+        
+        # Also check for eval_val/metrics.json pattern
+        eval_metrics_path = path.parent / "eval_val" / "metrics.json"
+        if eval_metrics_path.exists():
+            with eval_metrics_path.open("r", encoding="utf-8") as f:
+                metrics = json.load(f)
+                if "metrics" in results:
+                    results["metrics"].update(metrics)
+                else:
+                    results["metrics"] = metrics
+    
+    # Calculate num_samples if missing
+    if "num_samples" not in results:
+        if "predictions" in results and isinstance(results["predictions"], list):
+            results["num_samples"] = len(results["predictions"])
+        elif "labels" in results and isinstance(results["labels"], list):
+            results["num_samples"] = len(results["labels"])
+        else:
+            # Try to infer from preds.jsonl file if it exists in the same directory
+            preds_path = path.parent / "preds.jsonl"
+            if preds_path.exists():
+                try:
+                    with preds_path.open("r", encoding="utf-8") as f:
+                        results["num_samples"] = sum(1 for line in f)
+                except:
+                    pass
+    
+    return results
 
 
 def extract_metrics(results: Dict[str, Any]) -> Dict[str, float]:
@@ -103,11 +143,18 @@ def compute_per_label_improvements(baseline_results: Dict[str, Any],
     finetuned_metrics = finetuned_results.get("metrics", {})
     
     for metric_type in ["mae", "rmse", "r2", "spearman"]:
-        per_label_key = f"per_label_{metric_type}"
-        if per_label_key in baseline_metrics and per_label_key in finetuned_metrics:
-            baseline_vals = np.array(baseline_metrics[per_label_key])
-            finetuned_vals = np.array(finetuned_metrics[per_label_key])
-            
+        # Try both formats: "per_label_X" and "X_per_label"
+        per_label_keys = [f"per_label_{metric_type}", f"{metric_type}_per_label"]
+        baseline_vals = None
+        finetuned_vals = None
+        
+        for key in per_label_keys:
+            if key in baseline_metrics:
+                baseline_vals = np.array(baseline_metrics[key])
+            if key in finetuned_metrics:
+                finetuned_vals = np.array(finetuned_metrics[key])
+        
+        if baseline_vals is not None and finetuned_vals is not None:
             if metric_type in ["mae", "rmse"]:
                 improvements = baseline_vals - finetuned_vals  # Lower is better
             else:

@@ -11,7 +11,7 @@ ENC_MODE ?= persona_token   # non_personalized | persona_token | personalized_de
 LLM_MODE ?= personalized_desc  # non_personalized | persona_token | personalized_desc | personalized_instruction
 
 CHECKPOINT ?= artifacts/models/encoder/enc_baseline_xlmr
-EVAL_SPLIT ?= val  # val | test
+EVAL_SPLIT ?= val
 
 CALIB_LABELS ?=
 TOPK_ECE ?=
@@ -146,7 +146,6 @@ train-enc-personalized-mdeberta:
 
 # ── Eval presets (val domyślnie) ─────────────────────────────────────────────
 # Ustaw zmienne środowiskowe, jeśli chcesz inny split/checkpoint.
-EVAL_SPLIT ?= val
 
 eval-enc-persona-token-xlmr:
 	CHECKPOINT=artifacts/models/encoder/enc_persona_token_xlmr \
