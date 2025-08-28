@@ -1,7 +1,7 @@
 # ===== Variables =====
-PY ?= python
+PY ?= python3
 export PYTHONPATH := .
-PY := python
+PY := python3
 CONFIG_BASE := configs/data_base.yaml
 CONFIG_LLM  := configs/data_llm.yaml
 CONFIG_ENC  := configs/data_encoder.yaml
@@ -230,3 +230,35 @@ workflow-gemma2-27b-quick:
 
 visualize-llm-training:
 	$(PY) scripts/visualize_llm_training.py --checkpoint $(CHECKPOINT)
+
+# ── Baseline Evaluation (Pre-trained Models) ────────────────────────────────
+eval-baseline-xlmr:
+	$(PY) scripts/eval_baseline.py --model xlm-roberta-base --split $(EVAL_SPLIT) --num_workers 0
+
+eval-baseline-xlmr-large:
+	$(PY) scripts/eval_baseline.py --model xlm-roberta-large --split $(EVAL_SPLIT) --num_workers 0 --eval_bs 2
+
+eval-baseline-mdeberta:
+	$(PY) scripts/eval_baseline.py --model microsoft/mdeberta-v3-base --split $(EVAL_SPLIT) --num_workers 0
+
+# ── Model Comparison ──────────────────────────────────────────────────────
+compare-xlmr:
+	$(PY) scripts/compare_results.py \
+		--baseline artifacts/baseline_eval/xlm_roberta_base/baseline_eval_$(EVAL_SPLIT).json \
+		--finetuned artifacts/models/encoder/enc_baseline_xlmr/eval_results_$(EVAL_SPLIT).json \
+		--model_name "XLM-RoBERTa-base" \
+		--output comparison_results/xlmr_base_$(EVAL_SPLIT).json
+
+compare-xlmr-large:
+	$(PY) scripts/compare_results.py \
+		--baseline artifacts/baseline_eval/xlm_roberta_large/baseline_eval_$(EVAL_SPLIT).json \
+		--finetuned artifacts/models/encoder/enc_xlmr_large/eval_results_$(EVAL_SPLIT).json \
+		--model_name "XLM-RoBERTa-large" \
+		--output comparison_results/xlmr_large_$(EVAL_SPLIT).json
+
+compare-mdeberta:
+	$(PY) scripts/compare_results.py \
+		--baseline artifacts/baseline_eval/microsoft_mdeberta_v3_base/baseline_eval_$(EVAL_SPLIT).json \
+		--finetuned artifacts/models/encoder/enc_mdeberta/eval_results_$(EVAL_SPLIT).json \
+		--model_name "mDeBERTa-v3-base" \
+		--output comparison_results/mdeberta_v3_base_$(EVAL_SPLIT).json
