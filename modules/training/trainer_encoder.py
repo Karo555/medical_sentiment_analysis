@@ -3,7 +3,7 @@ from typing import Dict, Any
 import numpy as np
 import torch
 from transformers import TrainingArguments, Trainer
-from modules.metrics.regression import compute_all_metrics
+from modules.metrics.classification import compute_all_metrics
 from inspect import signature
 
 def _to_numpy(x):
@@ -38,7 +38,7 @@ def build_trainer(model, tokenizer, train_ds, val_ds, training_cfg: Dict[str, An
         eval_strategy=eval_strat,
         save_strategy=save_strat,
         load_best_model_at_end=load_best,
-        metric_for_best_model=training_cfg.get("metric_for_best_model", "r2"),
+        metric_for_best_model=training_cfg.get("metric_for_best_model", "f1_score"),  # Use F1-score for binary classification
         greater_is_better=bool(training_cfg.get("greater_is_better", True)),
         logging_steps=int(training_cfg.get("logging_steps", 50)),
         warmup_ratio=float(training_cfg.get("warmup_ratio", 0.1)),

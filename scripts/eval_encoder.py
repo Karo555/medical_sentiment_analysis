@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Ewaluacja wytrenowanego ENCODERA (regresja 21D) na {val|test}.
+Evaluation of trained ENCODER (binary classification 21D) on {val|test}.
 
-- Ładuje config eksperymentu (ten sam, co do treningu).
-- Odtwarza model (EncoderRegressor) i wczytuje wagi z checkpointu (pytorch_model.bin).
-- Buduje dataset/dataloader z widoku encodera (data/processed/encoder/*.jsonl).
-- Oblicza MAE, RMSE, R², Spearman (macro i per-label).
-- Zapisuje wyniki i predykcje do plików.
+- Loads experiment config (same as for training).
+- Recreates model (EncoderClassifier) and loads weights from checkpoint.
+- Builds dataset/dataloader from encoder view (data/processed/encoder/*.jsonl).
+- Computes Accuracy, F1-score, Precision, Recall (macro and per-label).
+- Saves results and predictions to files.
 
-Użycie:
+Usage:
   python scripts/eval_encoder.py --config configs/experiment/enc_baseline.yaml --split val
-  # opcjonalnie inny checkpoint:
+  # optionally different checkpoint:
   python scripts/eval_encoder.py --config ... --split test --checkpoint artifacts/models/encoder/enc_baseline_xlmr
 """
 from __future__ import annotations
@@ -25,10 +25,10 @@ import torch
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 
-from modules.models.encoder_regressor import EncoderRegressor
+from modules.models.encoder_classifier import EncoderClassifier
 from modules.data.datasets import EncoderJsonlDataset, EncoderDatasetConfig
 from modules.data.collate import encoder_collate
-from modules.metrics.regression import compute_all_metrics
+from modules.metrics.classification import compute_all_metrics
 
 
 def load_yaml(path: str) -> Dict[str, Any]:
@@ -44,14 +44,14 @@ def set_seed_all(seed: int):
         torch.cuda.manual_seed_all(seed)
 
 
-def safe_resize_up_only(model: EncoderRegressor, tokenizer):
+def safe_resize_up_only(model: EncoderClassifier, tokenizer):
     cur = model.backbone.get_input_embeddings().weight.shape[0]
     tgt = len(tokenizer)
     if tgt > cur:
         model.resize_token_embeddings(tgt)
 
 
-def load_checkpoint_weights(model: EncoderRegressor, ckpt_dir: Path):
+def load_checkpoint_weights(model: EncoderClassifier, ckpt_dir: Path):
     """Load model weights from either pytorch_model.bin or model.safetensors."""
     bin_path = ckpt_dir / "pytorch_model.bin"
     safetensors_path = ckpt_dir / "model.safetensors"
@@ -76,7 +76,7 @@ def load_checkpoint_weights(model: EncoderRegressor, ckpt_dir: Path):
 
 
 @torch.no_grad()
-def run_inference(model: EncoderRegressor, loader: DataLoader, device: torch.device) -> Tuple[np.ndarray, np.ndarray, List[Dict[str, Any]]]:
+def run_inference(model: EncoderClassifier, loader: DataLoader, device: torch.device) -> Tuple[np.ndarray, np.ndarray, List[Dict[str, Any]]]:
     model.eval()
     preds_list, labels_list, metadata = [], [], []
     for batch in loader:
@@ -86,7 +86,14 @@ def run_inference(model: EncoderRegressor, loader: DataLoader, device: torch.dev
 
         out = model(input_ids=input_ids, attention_mask=attention_mask)
         logits = out["logits"]
-        preds_list.append(logits.detach().cpu().numpy())
+        
+        # For binary classification, apply sigmoid to get probabilities
+        if hasattr(model, 'use_binary_classification') and model.use_binary_classification:
+            probs = torch.sigmoid(logits)
+            preds_list.append(probs.detach().cpu().numpy())
+        else:
+            preds_list.append(logits.detach().cpu().numpy())
+        
         labels_list.append(labels.detach().cpu().numpy())
         
         # Extract metadata for analysis
@@ -113,6 +120,9 @@ def main():
     ap.add_argument("--checkpoint", default=None, help="Ścieżka do katalogu checkpointu (domyślnie training.output_dir)")
     ap.add_argument("--eval_bs", type=int, default=None, help="Nadpisz batch size na ewaluacji")
     ap.add_argument("--num_workers", type=int, default=None, help="Nadpisz liczbę workerów DataLoadera")
+    ap.add_argument("--optimize-thresholds", action="store_true", help="Apply threshold optimization for improved performance")
+    ap.add_argument("--threshold-metric", default="f1_score", choices=["f1_score", "precision", "recall", "accuracy"],
+                   help="Metric to optimize thresholds for")
     args = ap.parse_args()
 
     cfg = load_yaml(args.config)
@@ -138,13 +148,15 @@ def main():
     use_fast = bool(tok_cfg.get("use_fast", False))  # SP → False
     tokenizer = AutoTokenizer.from_pretrained(tok_path, use_fast=use_fast)
 
-    # model
+    # model (class weights will be loaded from checkpoint if they were used during training)
     model_name = cfg["model"]["name_or_path"]
-    model = EncoderRegressor(
+    model = EncoderClassifier(
         model_name_or_path=model_name,
         out_dim=int(cfg["model"].get("out_dim", 21)),
         dropout_prob=float(cfg["model"].get("dropout", 0.1)),
         use_fast_pooler=bool(cfg["model"].get("use_fast_pooler", True)),
+        use_binary_classification=bool(cfg["model"].get("use_binary_classification", True)),
+        class_weights=None,  # Will be loaded from checkpoint if available
     )
     # dopasuj embeddings do tokenizer (tylko w górę)
     safe_resize_up_only(model, tokenizer)
@@ -177,8 +189,66 @@ def main():
     # inference
     y_true, y_pred, metadata = run_inference(model, loader, device)
 
-    # metrics
-    metrics = compute_all_metrics(y_true, y_pred)
+    # Apply threshold optimization if requested
+    optimized_thresholds = None
+    if args.optimize_thresholds:
+        from modules.optimization.threshold_optimizer import ThresholdOptimizer, ThresholdOptimizationConfig
+        
+        print(f"Optimizing thresholds for {args.threshold_metric}...")
+        
+        # Get label names (18D labels)
+        label_names = [
+            "positive", "negative", "happiness", "delight", "inspiring", "calm",
+            "surprise", "compassion", "fear", "sadness", "disgust", "anger",
+            "ironic", "political", "interesting", "understandable", "offensive", "funny"
+        ]
+        
+        # Configure optimizer
+        config = ThresholdOptimizationConfig(
+            metric=args.threshold_metric,
+            search_strategy="grid",
+            n_thresholds=81,
+            search_range=(0.1, 0.9)
+        )
+        
+        optimizer = ThresholdOptimizer(config)
+        
+        # Optimize thresholds (y_pred contains probabilities from sigmoid)
+        optimization_results = optimizer.optimize_thresholds(
+            y_true, y_pred, label_names
+        )
+        
+        optimized_thresholds = optimization_results['optimal_thresholds']
+        
+        # Save threshold optimization results
+        threshold_dir = ckpt_dir / "threshold_optimization"
+        threshold_dir.mkdir(parents=True, exist_ok=True)
+        
+        threshold_file = threshold_dir / f"optimized_thresholds_{args.split}_{args.threshold_metric}.json"
+        optimizer.save_thresholds(threshold_file)
+        print(f"Optimized thresholds saved to: {threshold_file}")
+        
+        # Apply optimized thresholds to get binary predictions
+        y_pred_binary_optimized = optimizer.apply_thresholds(y_pred)
+        
+        # Compute metrics with optimized thresholds
+        metrics_optimized = compute_all_metrics(y_true, y_pred_binary_optimized)
+        
+        # Save optimized metrics
+        optimized_metrics_file = threshold_dir / f"metrics_optimized_{args.split}_{args.threshold_metric}.json"
+        with optimized_metrics_file.open('w') as f:
+            json.dump(metrics_optimized, f, indent=2)
+        
+        print(f"Optimized performance:")
+        print(f"  Accuracy: {metrics_optimized['accuracy']:.4f}")
+        print(f"  F1-Score: {metrics_optimized['f1_score']:.4f}")
+        print(f"  Precision: {metrics_optimized['precision']:.4f}")
+        print(f"  Recall: {metrics_optimized['recall']:.4f}")
+
+    # Standard metrics with default 0.5 threshold
+    # Convert probabilities to binary predictions using 0.5 threshold
+    y_pred_binary_default = (y_pred >= 0.5).astype(int)
+    metrics = compute_all_metrics(y_true, y_pred_binary_default)
 
     # zapisy
     # domyślnie zapisujemy do katalogu checkpointu
@@ -191,11 +261,23 @@ def main():
     
     # Save results in format expected by analysis script
     results_for_analysis = {
-        "predictions": y_pred.tolist(),
+        "predictions": y_pred.tolist(),  # Probabilities
+        "predictions_binary_default": y_pred_binary_default.tolist(),  # Binary with 0.5 threshold
         "labels": y_true.tolist(),
         "metadata": metadata,
         "metrics": metrics
     }
+    
+    # Add optimized results if threshold optimization was applied
+    if args.optimize_thresholds and optimized_thresholds is not None:
+        results_for_analysis["predictions_binary_optimized"] = y_pred_binary_optimized.tolist()
+        results_for_analysis["optimized_thresholds"] = optimized_thresholds.tolist()
+        results_for_analysis["metrics_optimized"] = metrics_optimized
+        results_for_analysis["optimization_config"] = {
+            "metric": args.threshold_metric,
+            "strategy": "grid"
+        }
+    
     results_file = ckpt_dir / f"eval_results_{args.split}.json"
     with results_file.open("w", encoding="utf-8") as f:
         json.dump(results_for_analysis, f, indent=2, ensure_ascii=False)
@@ -210,10 +292,25 @@ def main():
 
     # konsola – krótkie podsumowanie
     print(f"[OK] Eval on {args.split}:")
-    print(f" MAE={metrics['mae']:.4f} | RMSE={metrics['rmse']:.4f} | R²={metrics['r2']:.4f} | Spearman={metrics['spearman']:.4f}")
+    print(f"Default Threshold (0.5) Performance:")
+    print(f"  Accuracy: {metrics['accuracy']:.4f}")
+    print(f"  F1-Score: {metrics['f1_score']:.4f}")
+    print(f"  Precision: {metrics['precision']:.4f}")
+    print(f"  Recall: {metrics['recall']:.4f}")
+    
+    if args.optimize_thresholds and optimized_thresholds is not None:
+        # Calculate improvements
+        acc_improvement = ((metrics_optimized['accuracy'] - metrics['accuracy']) / metrics['accuracy']) * 100
+        f1_improvement = ((metrics_optimized['f1_score'] - metrics['f1_score']) / max(metrics['f1_score'], 1e-8)) * 100
+        
+        print(f"\nThreshold Optimization Improvements:")
+        print(f"  Accuracy: {acc_improvement:+.1f}% ({metrics['accuracy']:.4f} → {metrics_optimized['accuracy']:.4f})")
+        print(f"  F1-Score: {f1_improvement:+.1f}% ({metrics['f1_score']:.4f} → {metrics_optimized['f1_score']:.4f})")
+    
     print(f"Saved metrics to: {out_dir/'metrics.json'}")
     print(f"Saved preds/labels to: {out_dir/'preds_labels.npz'}")
     print(f"Saved preds jsonl to: {preds_jsonl}")
+    print(f"Saved analysis results to: {results_file}")
 
 if __name__ == "__main__":
     main()

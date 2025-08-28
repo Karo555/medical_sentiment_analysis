@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Trening baseline encodera (XLM-R / mDeBERTa) z głowicą regresyjną (21D).
-Czyta config YAML, ładuje tokenizer (z artifacts lub HF), bezpiecznie rozszerza embeddings,
-buduje DataSet/Collate, odpala HF Trainer i zapisuje model.
+Training baseline encoder (XLM-R / mDeBERTa) with binary classification head (21D).
+Reads YAML config, loads tokenizer (from artifacts or HF), safely resizes embeddings,
+builds DataSet/Collate, runs HF Trainer and saves model.
 
-Użycie:
+Usage:
   python scripts/train_encoder.py --config configs/experiment/enc_baseline.yaml
 """
 from __future__ import annotations
@@ -16,10 +16,11 @@ import json
 import yaml
 import torch
 from transformers import AutoTokenizer
-from modules.models.encoder_regressor import EncoderRegressor
+from modules.models.encoder_classifier import EncoderClassifier
 from modules.data.datasets import EncoderJsonlDataset, EncoderDatasetConfig
 from modules.data.collate import encoder_collate
 from modules.training.trainer_encoder import build_trainer
+from modules.utils.class_weights import compute_class_weights_from_files
 
 def load_yaml(path: str) -> Dict[str, Any]:
     with open(path, "r", encoding="utf-8") as f:
@@ -58,13 +59,30 @@ def main():
     use_fast = bool(tok_cfg.get("use_fast", False))  # dla SP lepiej False
     tokenizer = AutoTokenizer.from_pretrained(tok_path, use_fast=use_fast)
 
+    # class weights (optional)
+    class_weights = None
+    if cfg["model"].get("use_class_weights", False):
+        print("[INFO] Computing class weights for imbalanced dataset...")
+        weights_method = cfg["model"].get("class_weights_method", "balanced")
+        smooth_factor = float(cfg["model"].get("class_weights_smooth", 1.0))
+        
+        weights_result = compute_class_weights_from_files(
+            train_path, 
+            method=weights_method,
+            smooth_factor=smooth_factor
+        )
+        class_weights = weights_result['pos_weights']
+        print(f"[INFO] Using {weights_method} class weights: min={class_weights.min():.3f}, max={class_weights.max():.3f}")
+    
     # model
     model_name = cfg["model"]["name_or_path"]
-    model = EncoderRegressor(
+    model = EncoderClassifier(
         model_name_or_path=model_name,
         out_dim=int(cfg["model"].get("out_dim", 21)),
         dropout_prob=float(cfg["model"].get("dropout", 0.1)),
         use_fast_pooler=bool(cfg["model"].get("use_fast_pooler", True)),
+        use_binary_classification=bool(cfg["model"].get("use_binary_classification", True)),
+        class_weights=class_weights,
     )
     # dopasuj embeddings do tokenizer (tylko w górę)
     safe_resize_up_only(model, tokenizer)

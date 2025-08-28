@@ -22,10 +22,10 @@ import torch
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 
-from modules.models.encoder_regressor import EncoderRegressor
+from modules.models.encoder_classifier import EncoderClassifier
 from modules.data.datasets import EncoderJsonlDataset, EncoderDatasetConfig
 from modules.data.collate import encoder_collate
-from modules.metrics.regression import compute_all_metrics
+from modules.metrics.classification import compute_all_metrics
 
 
 def load_yaml(path: str) -> Dict[str, Any]:
@@ -42,7 +42,7 @@ def set_seed_all(seed: int):
 
 
 @torch.no_grad()
-def run_inference(model: EncoderRegressor, loader: DataLoader, device: torch.device) -> Tuple[np.ndarray, np.ndarray, List[Dict[str, Any]]]:
+def run_inference(model: EncoderClassifier, loader: DataLoader, device: torch.device) -> Tuple[np.ndarray, np.ndarray, List[Dict[str, Any]]]:
     model.eval()
     preds_list, labels_list, metadata = [], [], []
     for batch in loader:
@@ -52,7 +52,14 @@ def run_inference(model: EncoderRegressor, loader: DataLoader, device: torch.dev
 
         out = model(input_ids=input_ids, attention_mask=attention_mask)
         logits = out["logits"]
-        preds_list.append(logits.detach().cpu().numpy())
+        
+        # For binary classification, apply sigmoid to get probabilities
+        if hasattr(model, 'use_binary_classification') and model.use_binary_classification:
+            probs = torch.sigmoid(logits)
+            preds_list.append(probs.detach().cpu().numpy())
+        else:
+            preds_list.append(logits.detach().cpu().numpy())
+            
         labels_list.append(labels.detach().cpu().numpy())
         
         # Extract metadata for analysis
@@ -105,12 +112,13 @@ def main():
     # Tokenizer - use model's default tokenizer
     tokenizer = AutoTokenizer.from_pretrained(args.model, use_fast=False)
 
-    # Model - create fresh model with regression head (NO checkpoint loading)
-    model = EncoderRegressor(
+    # Model - create fresh model with binary classification head (NO checkpoint loading)
+    model = EncoderClassifier(
         model_name_or_path=args.model,
-        out_dim=21,  # 21D emotion regression
+        out_dim=21,  # 21D binary classification
         dropout_prob=0.1,
         use_fast_pooler=True,
+        use_binary_classification=True,  # Enable binary classification mode
     )
     
     # Initialize regression head with small random weights
@@ -174,7 +182,11 @@ def main():
 
     # Console summary
     print(f"[OK] Baseline eval on {args.split}:")
-    print(f" MAE={metrics['mae']:.4f} | RMSE={metrics['rmse']:.4f} | R²={metrics['r2']:.4f} | Spearman={metrics['spearman']:.4f}")
+    print(f"Binary Classification Metrics:")
+    print(f"  Accuracy: {metrics['accuracy']:.4f}")
+    print(f"  F1-Score: {metrics['f1_score']:.4f}")
+    print(f"  Precision: {metrics['precision']:.4f}")
+    print(f"  Recall: {metrics['recall']:.4f}")
     print(f"Results saved to: {results_file}")
 
 if __name__ == "__main__":

@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Rysuje reliability plots i liczy ECE/RMCE dla regresji [0,1].
+Rysuje reliability plots i liczy ECE/RMCE dla binary classification probabilities [0,1].
+
+This script works with binary classification outputs (probabilities) from encoder models.
+The calibration analysis is still relevant for binary classification to assess how well
+the predicted probabilities match the true frequency of positive labels.
 
 Wejście:
   A) bezpośrednio summary (JSON) z modules.metrics.calibration.compute_calibration_summary
@@ -20,6 +24,7 @@ Dodatki:
       <outdir>/plots/overview.png
 
 Użycie:
+  # For binary classification probability calibration analysis:
   python scripts/plot_calibration.py --checkpoint artifacts/models/encoder/enc_baseline_xlmr --split val --label-names schema/label_names.json
   # albo
   python scripts/plot_calibration.py --summary artifacts/models/encoder/enc_baseline_xlmr/eval_val/calibration_summary.json --label-names schema/label_names.json

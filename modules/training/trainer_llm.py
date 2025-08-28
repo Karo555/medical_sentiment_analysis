@@ -23,7 +23,7 @@ from peft import LoraConfig, get_peft_model, TaskType
 from inspect import signature
 from pathlib import Path
 
-from modules.metrics.regression import compute_all_metrics
+from modules.metrics.classification import compute_all_metrics
 
 
 def _to_numpy(x):

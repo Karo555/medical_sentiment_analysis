@@ -26,7 +26,7 @@ from tqdm import tqdm
 
 from modules.data.datasets import LLMJsonlDataset, LLMDatasetConfig
 from modules.training.trainer_llm import parse_emotion_labels_from_generation
-from modules.metrics.regression import compute_all_metrics
+from modules.metrics.classification import compute_all_metrics
 
 
 def authenticate_huggingface():

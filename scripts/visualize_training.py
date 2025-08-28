@@ -48,7 +48,7 @@ def plot_training_curves(log_history: List[Dict], output_dir: Path) -> None:
     if train_losses:
         ax1.plot(epochs, train_losses, 'b-', label='Training Loss', linewidth=2)
         ax1.set_xlabel('Epoch')
-        ax1.set_ylabel('Loss (MSE)')
+        ax1.set_ylabel('Loss (BCE)')
         ax1.set_title('Training Loss Over Time')
         ax1.grid(True, alpha=0.3)
         ax1.legend()
@@ -56,22 +56,22 @@ def plot_training_curves(log_history: List[Dict], output_dir: Path) -> None:
     # Validation metrics
     val_epochs = []
     val_losses_clean = []
-    val_r2 = []
-    val_spearman = []
-    
+    val_accuracy = []
+    val_f1 = []
     for entry in log_history:
         if 'eval_loss' in entry:
             val_epochs.append(entry['epoch'])
             val_losses_clean.append(entry['eval_loss'])
-            val_r2.append(entry.get('eval_r2', 0))
-            val_spearman.append(entry.get('eval_spearman', 0))
+            val_accuracy.append(entry.get('eval_accuracy', 0))
+            val_f1.append(entry.get('eval_f1_score', 0))
     
     if val_losses_clean:
         ax2_twin = ax2.twinx()
         
         line1 = ax2.plot(val_epochs, val_losses_clean, 'r-', label='Validation Loss', linewidth=2)
-        line2 = ax2_twin.plot(val_epochs, val_r2, 'g-', label='R² Score', linewidth=2)
-        line3 = ax2_twin.plot(val_epochs, val_spearman, 'orange', linestyle='--', label='Spearman ρ', linewidth=2)
+        # Use binary classification metrics
+        line2 = ax2_twin.plot(val_epochs, val_accuracy, 'g-', label='Accuracy', linewidth=2)
+        line3 = ax2_twin.plot(val_epochs, val_f1, 'orange', linestyle='--', label='F1-Score', linewidth=2)
         
         ax2.set_xlabel('Epoch')
         ax2.set_ylabel('Validation Loss', color='r')
@@ -91,7 +91,7 @@ def plot_per_label_performance(log_history: List[Dict], label_names: List[str], 
     """Plot per-label performance metrics"""
     final_eval = None
     for entry in reversed(log_history):
-        if 'eval_r2_per_label' in entry:
+        if 'eval_accuracy_per_label' in entry:
             final_eval = entry
             break
     
@@ -99,12 +99,17 @@ def plot_per_label_performance(log_history: List[Dict], label_names: List[str], 
         print("No per-label evaluation metrics found")
         return
     
-    metrics = {
-        'R² Score': final_eval['eval_r2_per_label'],
-        'MAE': final_eval['eval_mae_per_label'],
-        'RMSE': final_eval['eval_rmse_per_label'],
-        'Spearman ρ': final_eval['eval_spearman_per_label']
-    }
+    # Use binary classification metrics
+    if 'eval_accuracy_per_label' in final_eval:
+        metrics = {
+            'Accuracy': final_eval['eval_accuracy_per_label'],
+            'F1-Score': final_eval['eval_f1_score_per_label'],
+            'Precision': final_eval['eval_precision_per_label'],
+            'Recall': final_eval['eval_recall_per_label']
+        }
+    else:
+        print("No binary classification metrics found")
+        return
     
     fig, axes = plt.subplots(2, 2, figsize=(16, 12))
     axes = axes.flatten()
@@ -144,19 +149,23 @@ def plot_metric_distribution(log_history: List[Dict], output_dir: Path) -> None:
     """Plot distribution of per-label metrics"""
     final_eval = None
     for entry in reversed(log_history):
-        if 'eval_r2_per_label' in entry:
+        if 'eval_accuracy_per_label' in entry:
             final_eval = entry
             break
     
     if not final_eval:
         return
     
-    metrics_data = {
-        'R² Score': final_eval['eval_r2_per_label'],
-        'MAE': final_eval['eval_mae_per_label'],
-        'RMSE': final_eval['eval_rmse_per_label'],
-        'Spearman ρ': final_eval['eval_spearman_per_label']
-    }
+    # Use binary classification metrics
+    if 'eval_accuracy_per_label' in final_eval:
+        metrics_data = {
+            'Accuracy': final_eval['eval_accuracy_per_label'],
+            'F1-Score': final_eval['eval_f1_score_per_label'],
+            'Precision': final_eval['eval_precision_per_label'],
+            'Recall': final_eval['eval_recall_per_label']
+        }
+    else:
+        return
     
     fig, axes = plt.subplots(2, 2, figsize=(12, 10))
     axes = axes.flatten()
@@ -185,7 +194,7 @@ def create_performance_summary(log_history: List[Dict], label_names: List[str], 
     """Create a comprehensive performance summary report"""
     final_eval = None
     for entry in reversed(log_history):
-        if 'eval_r2' in entry:
+        if 'eval_accuracy' in entry:
             final_eval = entry
             break
     
@@ -193,41 +202,46 @@ def create_performance_summary(log_history: List[Dict], label_names: List[str], 
         print("No evaluation metrics found")
         return
     
-    summary = {
-        'Overall Performance': {
-            'R² Score': final_eval.get('eval_r2', 0),
-            'MAE': final_eval.get('eval_mae', 0),
-            'RMSE': final_eval.get('eval_rmse', 0),
-            'Spearman ρ': final_eval.get('eval_spearman', 0),
-            'Validation Loss': final_eval.get('eval_loss', 0)
-        },
-        'Per-Label Performance': {}
-    }
-    
-    if 'eval_r2_per_label' in final_eval:
-        for i, label in enumerate(label_names):
-            summary['Per-Label Performance'][label] = {
-                'R² Score': final_eval['eval_r2_per_label'][i],
-                'MAE': final_eval['eval_mae_per_label'][i],
-                'RMSE': final_eval['eval_rmse_per_label'][i],
-                'Spearman ρ': final_eval['eval_spearman_per_label'][i]
-            }
-    
-    # Statistics
-    if 'eval_r2_per_label' in final_eval:
-        r2_values = final_eval['eval_r2_per_label']
-        summary['Statistics'] = {
-            'Best performing labels (R²)': sorted(
-                [(label_names[i], r2_values[i]) for i in range(len(label_names))],
-                key=lambda x: x[1], reverse=True
-            )[:5],
-            'Worst performing labels (R²)': sorted(
-                [(label_names[i], r2_values[i]) for i in range(len(label_names))],
-                key=lambda x: x[1]
-            )[:5],
-            'Performance variance (R²)': np.var(r2_values),
-            'Performance std (R²)': np.std(r2_values)
+    # Use binary classification metrics
+    if 'eval_accuracy' in final_eval:
+        summary = {
+            'Overall Performance': {
+                'Accuracy': final_eval.get('eval_accuracy', 0),
+                'F1-Score': final_eval.get('eval_f1_score', 0),
+                'Precision': final_eval.get('eval_precision', 0),
+                'Recall': final_eval.get('eval_recall', 0),
+                'Validation Loss': final_eval.get('eval_loss', 0)
+            },
+            'Per-Label Performance': {}
         }
+        
+        if 'eval_accuracy_per_label' in final_eval:
+            for i, label in enumerate(label_names):
+                summary['Per-Label Performance'][label] = {
+                    'Accuracy': final_eval['eval_accuracy_per_label'][i],
+                    'F1-Score': final_eval['eval_f1_score_per_label'][i],
+                    'Precision': final_eval['eval_precision_per_label'][i],
+                    'Recall': final_eval['eval_recall_per_label'][i]
+                }
+        
+        # Statistics for F1-score as primary metric
+        if 'eval_f1_score_per_label' in final_eval:
+            f1_values = final_eval['eval_f1_score_per_label']
+            summary['Statistics'] = {
+                'Best performing labels (F1)': sorted(
+                    [(label_names[i], f1_values[i]) for i in range(len(label_names))],
+                    key=lambda x: x[1], reverse=True
+                )[:5],
+                'Worst performing labels (F1)': sorted(
+                    [(label_names[i], f1_values[i]) for i in range(len(label_names))],
+                    key=lambda x: x[1]
+                )[:5],
+                'Performance variance (F1)': np.var(f1_values),
+                'Performance std (F1)': np.std(f1_values)
+            }
+    else:
+        print("No binary classification metrics found for summary")
+        return
     
     with open(output_path, 'w') as f:
         json.dump(summary, f, indent=2)
