@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Training baseline encoder (XLM-R / mDeBERTa) with binary classification head (21D).
+Training baseline encoder (XLM-R / mDeBERTa) with binary classification head (18D).
 Reads YAML config, loads tokenizer (from artifacts or HF), safely resizes embeddings,
 builds DataSet/Collate, runs HF Trainer and saves model.
 
@@ -78,7 +78,7 @@ def main():
     model_name = cfg["model"]["name_or_path"]
     model = EncoderClassifier(
         model_name_or_path=model_name,
-        out_dim=int(cfg["model"].get("out_dim", 21)),
+        out_dim=int(cfg["model"].get("out_dim", 18)),
         dropout_prob=float(cfg["model"].get("dropout", 0.1)),
         use_fast_pooler=bool(cfg["model"].get("use_fast_pooler", True)),
         use_binary_classification=bool(cfg["model"].get("use_binary_classification", True)),
@@ -91,7 +91,7 @@ def main():
     dcfg = cfg.get("data", {})
     enc_ds_cfg = EncoderDatasetConfig(
         max_length=int(dcfg.get("max_length", 256)),
-        label_dim=int(dcfg.get("label_dim", 21)),
+        label_dim=int(dcfg.get("label_dim", 18)),
         clamp_labels_to=tuple(dcfg.get("clamp_labels_to", [0.0, 1.0])),
         return_meta=bool(dcfg.get("return_meta", True)),
     )

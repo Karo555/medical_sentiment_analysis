@@ -19,7 +19,6 @@ model:
   dropout: 0.1
   use_fast_pooler: true
   use_binary_classification: true
-  use_binary_classification: true
 
 data:
   max_length: 256

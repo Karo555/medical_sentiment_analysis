@@ -59,14 +59,14 @@ class EncoderDatasetConfig:
     add_special_tokens: bool = True
     truncation: bool = True
     return_meta: bool = True                # dołącz "id"/"lang"/"persona_id" w itemie
-    label_dim: Optional[int] = 21           # weryfikacja długości wektora etykiet (None = bez checku)
+    label_dim: Optional[int] = 18           # weryfikacja długości wektora etykiet (None = bez checku)
     clamp_labels_to: Optional[Tuple[float, float]] = (0.0, 1.0)  # None = bez clampu
     dtype_labels: torch.dtype = torch.float32
 
 
 class EncoderJsonlDataset(Dataset):
     """
-    Dataset pod ENCODER (regresja 21D). Zwraca:
+    Dataset pod ENCODER (multi-label binary classification 18D). Zwraca:
       {
         "input_ids": LongTensor [L],
         "attention_mask": LongTensor [L],

@@ -16,6 +16,9 @@ import warnings
 from pathlib import Path
 from typing import Dict, Any, Optional
 
+# Set CUDA memory allocation configuration to avoid fragmentation
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+
 import torch
 import yaml
 from transformers import AutoTokenizer
@@ -165,8 +168,20 @@ def create_collate_fn(tokenizer: AutoTokenizer, cfg: Dict[str, Any]):
     )
 
 
+def signal_handler(signum, frame):
+    """Handle system signals gracefully."""
+    print(f"\n[SIGNAL] Received signal {signum}. Attempting graceful shutdown...")
+    print(f"[SIGNAL] Frame: {frame}")
+    import sys
+    sys.exit(1)
+
 def main():
     """Main training function."""
+    # Set up signal handlers
+    import signal
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
+    
     parser = argparse.ArgumentParser(description="Train LLM for medical sentiment analysis")
     parser.add_argument("--config", required=True, help="Path to experiment config file")
     parser.add_argument("--resume_from_checkpoint", type=str, help="Resume training from checkpoint")
@@ -181,6 +196,18 @@ def main():
     
     print(f"[INFO] Starting LLM training with config: {args.config}")
     print(f"[INFO] Random seed: {seed}")
+    
+    # System resource check
+    try:
+        import psutil
+        import torch
+        memory = psutil.virtual_memory()
+        print(f"[SYSTEM] RAM: {memory.total / 1024**3:.1f}GB total, {memory.available / 1024**3:.1f}GB available")
+        if torch.cuda.is_available():
+            gpu_memory = torch.cuda.get_device_properties(0).total_memory / 1024**3
+            print(f"[SYSTEM] GPU: {torch.cuda.get_device_name(0)}, {gpu_memory:.1f}GB VRAM")
+    except Exception as e:
+        print(f"[SYSTEM] Could not check system resources: {e}")
     
     # Authenticate with Hugging Face
     authenticate_huggingface()
@@ -239,8 +266,9 @@ def main():
         print("[INFO] No LoRA configuration found, using full fine-tuning")
     
     # Resize tokenizer embeddings if needed
-    if len(tokenizer) > model.config.vocab_size:
-        print(f"[INFO] Resizing model embeddings from {model.config.vocab_size} to {len(tokenizer)}")
+    vocab_size = getattr(model.config, 'vocab_size', getattr(model.config, 'text_config', model.config).vocab_size)
+    if len(tokenizer) > vocab_size:
+        print(f"[INFO] Resizing model embeddings from {vocab_size} to {len(tokenizer)}")
         model.resize_token_embeddings(len(tokenizer))
     
     # Prepare model for training
@@ -291,11 +319,21 @@ def main():
     import time
     train_start_time = time.time()
     
-    if args.resume_from_checkpoint:
-        print(f"[INFO] Resuming from checkpoint: {args.resume_from_checkpoint}")
-        trainer.train(resume_from_checkpoint=args.resume_from_checkpoint)
-    else:
-        trainer.train()
+    try:
+        print("[DEBUG] About to start trainer.train()")
+        if args.resume_from_checkpoint:
+            print(f"[INFO] Resuming from checkpoint: {args.resume_from_checkpoint}")
+            trainer.train(resume_from_checkpoint=args.resume_from_checkpoint)
+        else:
+            print("[DEBUG] Starting training from scratch...")
+            trainer.train()
+        print("[DEBUG] Training completed successfully")
+    except Exception as e:
+        print(f"[ERROR] Training failed with exception: {type(e).__name__}: {str(e)}")
+        import traceback
+        print("[ERROR] Full traceback:")
+        traceback.print_exc()
+        raise
     
     train_end_time = time.time()
     training_duration = train_end_time - train_start_time
@@ -306,6 +344,16 @@ def main():
     # Save model and metrics
     output_dir = Path(trainer.args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
+    
+    # Clean up memory before evaluation to prevent OOM
+    print("[INFO] Cleaning up memory before evaluation...")
+    import gc
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+        allocated = torch.cuda.memory_allocated() / (1024**3)
+        reserved = torch.cuda.memory_reserved() / (1024**3)
+        print(f"[INFO] GPU memory before eval: {allocated:.2f}GB allocated, {reserved:.2f}GB reserved")
     
     print("[INFO] Evaluating on validation set...")
     eval_results = trainer.evaluate()

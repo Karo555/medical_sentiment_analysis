@@ -1,0 +1,9 @@
+{
+  "model_name": "mDeBERTa-v3-base (persona token)",
+  "baseline_file": "artifacts/baseline_eval/microsoft_mdeberta_v3_base/baseline_eval_val.json",
+  "finetuned_file": "artifacts/models/encoder/enc_persona_token_mdeberta/eval_results_val.json",
+  "baseline_samples": 661,
+  "finetuned_samples": 661,
+  "metric_improvements": {},
+  "per_label_improvements": {}
+}

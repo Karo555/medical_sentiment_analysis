@@ -205,3 +205,48 @@ cython_debug/
 marimo/_static/
 marimo/_lsp/
 __marimo__/
+
+# Medical Sentiment Analysis Project Specific
+# Model checkpoints and training artifacts (large files)
+artifacts/models/*/checkpoint-*/optimizer.pt
+artifacts/models/*/checkpoint-*/scheduler.pt
+artifacts/models/*/checkpoint-*/rng_state.pth
+artifacts/models/*/checkpoint-*/trainer_state.json
+artifacts/models/*/*.safetensors
+artifacts/models/*/*.bin
+artifacts/models/*/*.pt
+artifacts/models/*/training_args.bin
+
+# Tokenizer models (binary files)
+artifacts/tokenizers/*/tokenizer.json
+artifacts/tokenizers/*/*.model
+artifacts/tokenizers/*/sentencepiece.bpe.model
+artifacts/tokenizers/*/spm.model
+
+# Deprecated and backup files
+data/personas/[depreciated]*.json
+data/raw/[depreciated]*.json
+data/processed/*_backup/
+schema/*_backup.json
+
+# Node.js (for any potential web interface)
+node_modules/
+package-lock.json
+
+# Temporary analysis files
+*.tmp
+*.bak
+*.old
+*~
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Claude Code
+.claude/

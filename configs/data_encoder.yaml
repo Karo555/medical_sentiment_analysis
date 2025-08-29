@@ -1,5 +1,5 @@
 # configs/data_encoder.yaml
-# WIDOK DANYCH dla ENCODERÓW (regresja 21D): z jednego rekordu źródłowego
+# WIDOK DANYCH dla ENCODERÓW (multi-label binary classification 18D): z jednego rekordu źródłowego
 # budujemy pojedynczy ciąg tekstowy (string) zgodny z wybranym trybem,
 # a następnie (opcjonalnie) materializujemy wersję potokenizowaną.
 #
@@ -12,10 +12,10 @@
 version: 1
 name: encoder_data_view
 description: >
-  Dane do fine-tuningu encoderów (XLM-R, mDeBERTa) w trybie regresji.
-  Z rekordu {text, persona_id, persona_desc, lang, labels[21]} budujemy input_text
+  Dane do fine-tuningu encoderów (XLM-R, mDeBERTa) w trybie multi-label binary classification.
+  Z rekordu {text, persona_id, persona_desc, lang, labels[18]} budujemy input_text
   według wybranego trybu (non-personalized, persona_token, personalized_desc).
-  Target to wektor 21 floatów w zakresie [0,1].
+  Target to wektor 18 floatów binarnych w zakresie [0,1].
 
 # ---------------------------------------------------------------------------
 # ŚCIEŻKI I PLIKI
@@ -27,7 +27,7 @@ paths:
   tokenized_dir: data/processed/encoder_tokenized  # (opcjonalnie) zapis potokenizowanych danych
   reports_dir: reports/encoder
   personas_file: data/personas/personas.json      # słownik person (opcjonalnie do sanity check)
-  label_names_file: schema/label_names.json       # lista 21 nazw etykiet (kolejność)
+  label_names_file: schema/label_names.json       # lista 18 nazw etykiet (kolejność)
 
 files:
   # zakładamy, że base ma co najmniej te pliki jsonl
@@ -67,7 +67,7 @@ source_record_contract:
     labels: array[float]
   constraints:
     lang_allowed: ["pl", "en"]
-    labels_length: 21
+    labels_length: 18
     labels_range: [0.0, 1.0]
     persona_id_pattern: "^[a-z0-9_\\-]+$"
   on_missing:
@@ -164,7 +164,7 @@ materialize_tokenized:
 target:
   dtype: "float32"
   clamp_to_range: [0.0, 1.0]
-  ensure_length: 21
+  ensure_length: 18
   # scaling/standardization zostawiamy wyłączone (pracujemy na [0,1])
   scaling:
     enabled: false

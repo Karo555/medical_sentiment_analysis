@@ -39,7 +39,7 @@ def quick_train_test():
     tokenizer = AutoTokenizer.from_pretrained("xlm-roberta-base", use_fast=False)
     
     # Small dataset for quick testing
-    ds_cfg = EncoderDatasetConfig(max_length=128, label_dim=21, return_meta=False)
+    ds_cfg = EncoderDatasetConfig(max_length=128, label_dim=18, return_meta=False)
     train_ds = EncoderJsonlDataset(train_file, tokenizer, cfg=ds_cfg)
     val_ds = EncoderJsonlDataset(val_file, tokenizer, cfg=ds_cfg)
     
@@ -59,7 +59,7 @@ def quick_train_test():
         # Create model
         model = EncoderClassifier(
             "xlm-roberta-base", 
-            out_dim=21, 
+            out_dim=18, 
             class_weights=weights,
             use_binary_classification=True
         )

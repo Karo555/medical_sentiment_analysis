@@ -8,14 +8,14 @@ from transformers import AutoConfig, AutoModel
 
 class EncoderClassifier(nn.Module):
     """
-    HF encoder (XLM-R / mDeBERTa) + mean-pooling + dropout + Linear -> 21 (multi-label binary classification).
+    HF encoder (XLM-R / mDeBERTa) + mean-pooling + dropout + Linear -> 18 (multi-label binary classification).
     Returns dict compatible with Trainer: {"loss", "logits"}.
     """
 
     def __init__(
         self,
         model_name_or_path: str,
-        out_dim: int = 21,
+        out_dim: int = 18,
         dropout_prob: float = 0.1,
         use_fast_pooler: bool = True,
         output_hidden_states: bool = False,

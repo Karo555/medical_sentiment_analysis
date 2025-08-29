@@ -75,7 +75,8 @@ training:
   num_workers: 0  # Often 0 for LLMs to avoid issues
   gradient_checkpointing: true  # Save memory
   remove_unused_columns: false
-  prediction_loss_only: false
+  prediction_loss_only: true  # Skip storing predictions to save memory
+  dataloader_drop_last: true  # Avoid variable batch sizes for consistent memory usage
   
   # Freezing options (optional)
   freeze:

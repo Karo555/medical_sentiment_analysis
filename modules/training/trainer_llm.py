@@ -182,11 +182,42 @@ class LLMTrainer(Trainer):
         self.step_count = 0
         self.last_log_time = None
         
-    def log(self, logs: Dict[str, float]) -> None:
+    def _cleanup_memory(self):
+        """Clean up GPU memory and run garbage collection."""
+        import gc
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            # Try to set memory fraction if we're approaching limits
+            try:
+                allocated_memory = torch.cuda.memory_allocated() / (1024**3)
+                total_memory = torch.cuda.get_device_properties(0).total_memory / (1024**3)
+                if allocated_memory / total_memory > 0.8:
+                    print(f"[MEMORY_WARNING] High memory usage: {allocated_memory:.1f}GB / {total_memory:.1f}GB ({allocated_memory/total_memory:.1%})")
+            except Exception:
+                pass
+        
+    def log(self, logs: Dict[str, float], start_time: Optional[float] = None) -> None:
         """Override log method to add custom logging."""
         # Add step information
         if self.state.global_step != self.step_count:
             self.step_count = self.state.global_step
+            print(f"[TRAIN_STEP] Step {self.step_count}: {logs}")
+            
+        # Add memory logging and cleanup every few steps
+        if self.step_count % 5 == 0:
+            try:
+                import torch
+                if torch.cuda.is_available():
+                    memory_allocated = torch.cuda.memory_allocated() / 1024**3  # GB
+                    memory_reserved = torch.cuda.memory_reserved() / 1024**3   # GB
+                    print(f"[MEMORY] Step {self.step_count}: Allocated {memory_allocated:.2f}GB, Reserved {memory_reserved:.2f}GB")
+                    
+                    # Clean up memory if usage is high
+                    if self.step_count % 20 == 0:  # Every 20 steps
+                        self._cleanup_memory()
+            except Exception as e:
+                print(f"[MEMORY_ERROR] Could not check GPU memory: {e}")
             
         # Add timing information
         import time
@@ -221,14 +252,18 @@ class LLMTrainer(Trainer):
                     else:
                         print(f"[TRAINING]   {key}: {value:.4f}")
         
-        super().log(logs)
+        # Call parent log method with proper parameters
+        if start_time is not None:
+            super().log(logs, start_time)
+        else:
+            super().log(logs)
         
-    def _maybe_log_save_evaluate(self, tr_loss, model, trial, epoch, ignore_keys_for_eval):
+    def _maybe_log_save_evaluate(self, tr_loss, grad_norm, model, trial, epoch, ignore_keys_for_eval, start_time, learning_rate=None):
         """Override to add evaluation progress tracking."""
         if self.control.should_evaluate:
             print(f"\n[EVALUATION] Starting evaluation at step {self.state.global_step}")
             
-        result = super()._maybe_log_save_evaluate(tr_loss, model, trial, epoch, ignore_keys_for_eval)
+        result = super()._maybe_log_save_evaluate(tr_loss, grad_norm, model, trial, epoch, ignore_keys_for_eval, start_time, learning_rate)
         
         if self.control.should_evaluate:
             print(f"[EVALUATION] ✅ Evaluation completed at step {self.state.global_step}")
@@ -243,6 +278,56 @@ class LLMTrainer(Trainer):
         if self.control.should_save:
             print(f"[CHECKPOINT] Model saved at step {self.state.global_step}")
             
+        return result
+    
+    def evaluation_loop(self, dataloader, description, prediction_loss_only=None, ignore_keys=None, metric_key_prefix="eval"):
+        """
+        Override evaluation loop to handle memory more efficiently for LLMs.
+        Clear GPU cache more frequently and use smaller batches if needed.
+        """
+        prediction_loss_only = prediction_loss_only if prediction_loss_only is not None else self.args.prediction_loss_only
+        
+        # Force prediction_loss_only for memory efficiency
+        if not prediction_loss_only:
+            print("[INFO] Forcing prediction_loss_only=True for memory efficiency during evaluation")
+            prediction_loss_only = True
+        
+        # Clear GPU cache before evaluation
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            print("[INFO] Cleared GPU cache before evaluation")
+        
+        # Reduce batch size if we're close to OOM
+        original_eval_batch_size = self.args.per_device_eval_batch_size
+        if torch.cuda.is_available():
+            allocated_memory = torch.cuda.memory_allocated() / (1024**3)  # GB
+            total_memory = torch.cuda.get_device_properties(0).total_memory / (1024**3)  # GB
+            memory_usage_ratio = allocated_memory / total_memory
+            
+            if memory_usage_ratio > 0.7:  # If using > 70% memory
+                new_batch_size = max(1, original_eval_batch_size // 2)
+                print(f"[MEMORY] High memory usage ({memory_usage_ratio:.1%}), reducing eval batch size from {original_eval_batch_size} to {new_batch_size}")
+                self.args.per_device_eval_batch_size = new_batch_size
+                # Recreate dataloader with new batch size
+                dataloader = self.get_eval_dataloader(self.eval_dataset)
+        
+        try:
+            result = super().evaluation_loop(
+                dataloader=dataloader,
+                description=description, 
+                prediction_loss_only=prediction_loss_only,
+                ignore_keys=ignore_keys,
+                metric_key_prefix=metric_key_prefix
+            )
+        finally:
+            # Restore original batch size
+            self.args.per_device_eval_batch_size = original_eval_batch_size
+            
+            # Clear GPU cache after evaluation
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+                print("[INFO] Cleared GPU cache after evaluation")
+        
         return result
     
     def compute_metrics_for_generation(self, eval_dataset, eval_predictions=None):
@@ -369,9 +454,10 @@ def build_llm_trainer(
         report_to=training_cfg.get("report_to", ["none"]),
         save_total_limit=int(training_cfg.get("save_total_limit", 2)),
         dataloader_num_workers=int(training_cfg.get("num_workers", 0)),  # Often 0 for LLMs
+        dataloader_drop_last=bool(training_cfg.get("dataloader_drop_last", True)),  # Avoid variable batch sizes
         seed=int(training_cfg.get("seed", 1337)),
         remove_unused_columns=bool(training_cfg.get("remove_unused_columns", False)),
-        prediction_loss_only=bool(training_cfg.get("prediction_loss_only", False)),
+        prediction_loss_only=bool(training_cfg.get("prediction_loss_only", True)),  # Skip storing predictions to save memory
     )
 
     # Handle steps-based evaluation/saving

@@ -74,8 +74,8 @@ def run_inference(model: EncoderClassifier, loader: DataLoader, device: torch.de
                 meta_item["persona_id"] = batch["persona_id"][i] if i < len(batch["persona_id"]) else "unknown"
             metadata.append(meta_item)
             
-    y_pred = np.concatenate(preds_list, axis=0) if preds_list else np.zeros((0, 21))
-    y_true = np.concatenate(labels_list, axis=0) if labels_list else np.zeros((0, 21))
+    y_pred = np.concatenate(preds_list, axis=0) if preds_list else np.zeros((0, 18))
+    y_true = np.concatenate(labels_list, axis=0) if labels_list else np.zeros((0, 18))
     return y_true, y_pred, metadata
 
 
@@ -115,7 +115,7 @@ def main():
     # Model - create fresh model with binary classification head (NO checkpoint loading)
     model = EncoderClassifier(
         model_name_or_path=args.model,
-        out_dim=21,  # 21D binary classification
+        out_dim=18,  # 18D binary classification
         dropout_prob=0.1,
         use_fast_pooler=True,
         use_binary_classification=True,  # Enable binary classification mode
@@ -135,7 +135,7 @@ def main():
     dcfg = cfg.get("data", {})
     enc_ds_cfg = EncoderDatasetConfig(
         max_length=int(dcfg.get("max_length", 256)),
-        label_dim=int(dcfg.get("label_dim", 21)),
+        label_dim=int(dcfg.get("label_dim", 18)),
         clamp_labels_to=tuple(dcfg.get("clamp_labels_to", [0.0, 1.0])),
         return_meta=True,
     )

@@ -22,14 +22,51 @@ PL_CHARS = set("ąćęłńóśżźĄĆĘŁŃÓŚŻŹ")
 def detect_lang_heuristic(text: str, default: str = "pl") -> str:
     if not isinstance(text, str) or not text.strip():
         return default
+    
+    # Strong indicator: Polish diacritics
     if any(ch in PL_CHARS for ch in text):
         return "pl"
-    # prościutka heurystyka: dużo 'the', 'and', 'is'
+    
+    # Improved English detection heuristics
     t = text.lower()
-    en_hits = sum(t.count(w) for w in [" the ", " and ", " is ", " was ", " with ", " to "])
-    pl_hits = sum(t.count(w) for w in [" i ", " jest ", " był ", " była ", " oraz ", " że ", " na "])
-    if en_hits > pl_hits:
+    
+    # Common English words and patterns
+    en_words = [" the ", " and ", " is ", " was ", " with ", " to ", " of ", " in ", " that ", " for ", 
+                " a ", " an ", " this ", " will ", " be ", " have ", " has ", " had ", " would ", " could ",
+                " should ", " doctor ", " very ", " good ", " great ", " excellent ", " patient ", " visit ",
+                " appointment ", " treatment ", " care ", " professional ", " recommend ", " staff "]
+    
+    # Common Polish words
+    pl_words = [" i ", " jest ", " był ", " była ", " oraz ", " że ", " na ", " w ", " z ", " do ", " się ",
+                " ma ", " nie ", " jak ", " to ", " po ", " bardzo ", " doktor ", " lekarz ", " wizyta ",
+                " pacjent ", " polecam ", " świetny ", " dobry ", " profesjonalny "]
+    
+    # Count word occurrences
+    en_hits = sum(t.count(word) for word in en_words)
+    pl_hits = sum(t.count(word) for word in pl_words)
+    
+    # Additional English patterns
+    en_patterns = 0
+    if " th" in t:  # "th" is very common in English
+        en_patterns += t.count(" th")
+    if "'s " in t or "'t " in t or "'ll " in t or "'re " in t:  # English contractions
+        en_patterns += 2
+    if text.count(".") > 0 and any(word in t for word in [" very ", " really ", " quite "]):
+        en_patterns += 1
+    
+    total_en_score = en_hits + en_patterns
+    
+    # Decision logic
+    if total_en_score > pl_hits and total_en_score > 0:
         return "en"
+    elif pl_hits > total_en_score:
+        return "pl"
+    
+    # Fallback: if no clear indicators and text is Latin script without Polish chars, assume English
+    # This helps with short English texts that don't contain common words
+    if all(ord(c) < 256 for c in text) and len(text.strip()) > 10:
+        return "en"
+    
     return default
 
 # --- Persona desc renderer ---

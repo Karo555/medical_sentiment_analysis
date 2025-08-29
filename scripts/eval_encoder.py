@@ -108,8 +108,8 @@ def run_inference(model: EncoderClassifier, loader: DataLoader, device: torch.de
                 meta_item["persona_id"] = batch["persona_id"][i] if i < len(batch["persona_id"]) else "unknown"
             metadata.append(meta_item)
             
-    y_pred = np.concatenate(preds_list, axis=0) if preds_list else np.zeros((0, 21))
-    y_true = np.concatenate(labels_list, axis=0) if labels_list else np.zeros((0, 21))
+    y_pred = np.concatenate(preds_list, axis=0) if preds_list else np.zeros((0, 18))
+    y_true = np.concatenate(labels_list, axis=0) if labels_list else np.zeros((0, 18))
     return y_true, y_pred, metadata
 
 
@@ -152,7 +152,7 @@ def main():
     model_name = cfg["model"]["name_or_path"]
     model = EncoderClassifier(
         model_name_or_path=model_name,
-        out_dim=int(cfg["model"].get("out_dim", 21)),
+        out_dim=int(cfg["model"].get("out_dim", 18)),
         dropout_prob=float(cfg["model"].get("dropout", 0.1)),
         use_fast_pooler=bool(cfg["model"].get("use_fast_pooler", True)),
         use_binary_classification=bool(cfg["model"].get("use_binary_classification", True)),
@@ -171,7 +171,7 @@ def main():
     dcfg = cfg.get("data", {})
     enc_ds_cfg = EncoderDatasetConfig(
         max_length=int(dcfg.get("max_length", 256)),
-        label_dim=int(dcfg.get("label_dim", 21)),
+        label_dim=int(dcfg.get("label_dim", 18)),
         clamp_labels_to=tuple(dcfg.get("clamp_labels_to", [0.0, 1.0])),
         return_meta=True,
     )
@@ -196,12 +196,18 @@ def main():
         
         print(f"Optimizing thresholds for {args.threshold_metric}...")
         
-        # Get label names (18D labels)
-        label_names = [
-            "positive", "negative", "happiness", "delight", "inspiring", "calm",
-            "surprise", "compassion", "fear", "sadness", "disgust", "anger",
-            "ironic", "political", "interesting", "understandable", "offensive", "funny"
-        ]
+        # Get label names from schema  
+        label_names_file = Path("schema/label_names.json")
+        if label_names_file.exists():
+            with label_names_file.open() as f:
+                label_names = json.load(f)
+        else:
+            # Fallback to hardcoded names
+            label_names = [
+                "positive", "negative", "happiness", "delight", "inspiring", "calm",
+                "surprise", "compassion", "fear", "sadness", "disgust", "anger",
+                "ironic", "political", "interesting", "understandable", "offensive", "funny"
+            ]
         
         # Configure optimizer
         config = ThresholdOptimizationConfig(
