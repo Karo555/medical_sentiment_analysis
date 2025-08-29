@@ -1,0 +1,167 @@
+{
+  "Overall Performance": {
+    "Accuracy": 0.7699613380400067,
+    "F1-Score": 0.07223457989146137,
+    "Precision": 0.08213576787024866,
+    "Recall": 0.07657657657657659,
+    "Validation Loss": 0.4807707965373993
+  },
+  "Per-Label Performance": {
+    "positive": {
+      "Accuracy": 0.632375189107413,
+      "F1-Score": 0.0,
+      "Precision": 0.0,
+      "Recall": 0.0
+    },
+    "negative": {
+      "Accuracy": 0.573373676248109,
+      "F1-Score": 0.5220338983050847,
+      "Precision": 0.8415300546448088,
+      "Recall": 0.3783783783783784
+    },
+    "happiness": {
+      "Accuracy": 0.8154311649016641,
+      "F1-Score": 0.0,
+      "Precision": 0.0,
+      "Recall": 0.0
+    },
+    "delight": {
+      "Accuracy": 0.9016641452344932,
+      "F1-Score": 0.0,
+      "Precision": 0.0,
+      "Recall": 0.0
+    },
+    "inspiring": {
+      "Accuracy": 0.8835098335854765,
+      "F1-Score": 0.0,
+      "Precision": 0.0,
+      "Recall": 0.0
+    },
+    "calm": {
+      "Accuracy": 0.9152798789712556,
+      "F1-Score": 0.0,
+      "Precision": 0.0,
+      "Recall": 0.0
+    },
+    "surprise": {
+      "Accuracy": 0.7685325264750378,
+      "F1-Score": 0.0,
+      "Precision": 0.0,
+      "Recall": 0.0
+    },
+    "compassion": {
+      "Accuracy": 0.7715582450832073,
+      "F1-Score": 0.0,
+      "Precision": 0.0,
+      "Recall": 0.0
+    },
+    "fear": {
+      "Accuracy": 0.8260211800302572,
+      "F1-Score": 0.0,
+      "Precision": 0.0,
+      "Recall": 0.0
+    },
+    "sadness": {
+      "Accuracy": 0.7670196671709532,
+      "F1-Score": 0.0,
+      "Precision": 0.0,
+      "Recall": 0.0
+    },
+    "disgust": {
+      "Accuracy": 0.8124054462934948,
+      "F1-Score": 0.0,
+      "Precision": 0.0,
+      "Recall": 0.0
+    },
+    "anger": {
+      "Accuracy": 0.6354009077155824,
+      "F1-Score": 0.0,
+      "Precision": 0.0,
+      "Recall": 0.0
+    },
+    "ironic": {
+      "Accuracy": 0.8154311649016641,
+      "F1-Score": 0.0,
+      "Precision": 0.0,
+      "Recall": 0.0
+    },
+    "political": {
+      "Accuracy": 0.8880484114977307,
+      "F1-Score": 0.0,
+      "Precision": 0.0,
+      "Recall": 0.0
+    },
+    "interesting": {
+      "Accuracy": 0.4962178517397882,
+      "F1-Score": 0.0,
+      "Precision": 0.0,
+      "Recall": 0.0
+    },
+    "understandable": {
+      "Accuracy": 0.6369137670196672,
+      "F1-Score": 0.7781885397412199,
+      "Precision": 0.6369137670196672,
+      "Recall": 1.0
+    },
+    "offensive": {
+      "Accuracy": 0.8260211800302572,
+      "F1-Score": 0.0,
+      "Precision": 0.0,
+      "Recall": 0.0
+    },
+    "funny": {
+      "Accuracy": 0.8940998487140696,
+      "F1-Score": 0.0,
+      "Precision": 0.0,
+      "Recall": 0.0
+    }
+  },
+  "Statistics": {
+    "Best performing labels (F1)": [
+      [
+        "understandable",
+        0.7781885397412199
+      ],
+      [
+        "negative",
+        0.5220338983050847
+      ],
+      [
+        "positive",
+        0.0
+      ],
+      [
+        "happiness",
+        0.0
+      ],
+      [
+        "delight",
+        0.0
+      ]
+    ],
+    "Worst performing labels (F1)": [
+      [
+        "positive",
+        0.0
+      ],
+      [
+        "happiness",
+        0.0
+      ],
+      [
+        "delight",
+        0.0
+      ],
+      [
+        "inspiring",
+        0.0
+      ],
+      [
+        "calm",
+        0.0
+      ]
+    ],
+    "Performance variance (F1)": 0.0435653207103583,
+    "Performance std (F1)": 0.2087230718209137
+  }
+}

@@ -1,0 +1,180 @@
+{
+  "optimal_thresholds": [
+    0.44000000000000006,
+    0.42000000000000004,
+    0.30000000000000004,
+    0.2,
+    0.27,
+    0.19,
+    0.28,
+    0.18,
+    0.29000000000000004,
+    0.27,
+    0.29000000000000004,
+    0.39,
+    0.30000000000000004,
+    0.24000000000000002,
+    0.41000000000000003,
+    0.37,
+    0.23,
+    0.25
+  ],
+  "optimization_stats": {
+    "positive": {
+      "threshold": 0.44000000000000006,
+      "original_threshold": 0.44000000000000006,
+      "score": 0.6538461538461539,
+      "n_positive": 243,
+      "class_weight": 1.0,
+      "status": "optimized"
+    },
+    "negative": {
+      "threshold": 0.42000000000000004,
+      "original_threshold": 0.42000000000000004,
+      "score": 0.7637051039697542,
+      "n_positive": 407,
+      "class_weight": 1.0,
+      "status": "optimized"
+    },
+    "happiness": {
+      "threshold": 0.30000000000000004,
+      "original_threshold": 0.30000000000000004,
+      "score": 0.6335403726708074,
+      "n_positive": 122,
+      "class_weight": 1.0,
+      "status": "optimized"
+    },
+    "delight": {
+      "threshold": 0.2,
+      "original_threshold": 0.2,
+      "score": 0.4270833333333333,
+      "n_positive": 65,
+      "class_weight": 1.0,
+      "status": "optimized"
+    },
+    "inspiring": {
+      "threshold": 0.27,
+      "original_threshold": 0.27,
+      "score": 0.5230769230769231,
+      "n_positive": 77,
+      "class_weight": 1.0,
+      "status": "optimized"
+    },
+    "calm": {
+      "threshold": 0.19,
+      "original_threshold": 0.19,
+      "score": 0.3870967741935484,
+      "n_positive": 56,
+      "class_weight": 1.0,
+      "status": "optimized"
+    },
+    "surprise": {
+      "threshold": 0.28,
+      "original_threshold": 0.28,
+      "score": 0.6201923076923077,
+      "n_positive": 153,
+      "class_weight": 1.0,
+      "status": "optimized"
+    },
+    "compassion": {
+      "threshold": 0.18,
+      "original_threshold": 0.18,
+      "score": 0.9045936395759717,
+      "n_positive": 151,
+      "class_weight": 1.0,
+      "status": "optimized"
+    },
+    "fear": {
+      "threshold": 0.29000000000000004,
+      "original_threshold": 0.29000000000000004,
+      "score": 0.6742857142857143,
+      "n_positive": 115,
+      "class_weight": 1.0,
+      "status": "optimized"
+    },
+    "sadness": {
+      "threshold": 0.27,
+      "original_threshold": 0.27,
+      "score": 0.6906077348066298,
+      "n_positive": 154,
+      "class_weight": 1.0,
+      "status": "optimized"
+    },
+    "disgust": {
+      "threshold": 0.29000000000000004,
+      "original_threshold": 0.29000000000000004,
+      "score": 0.6564102564102564,
+      "n_positive": 124,
+      "class_weight": 1.0,
+      "status": "optimized"
+    },
+    "anger": {
+      "threshold": 0.39,
+      "original_threshold": 0.39,
+      "score": 0.7892376681614349,
+      "n_positive": 241,
+      "class_weight": 1.0,
+      "status": "optimized"
+    },
+    "ironic": {
+      "threshold": 0.30000000000000004,
+      "original_threshold": 0.30000000000000004,
+      "score": 0.9069767441860465,
+      "n_positive": 122,
+      "class_weight": 1.0,
+      "status": "optimized"
+    },
+    "political": {
+      "threshold": 0.24000000000000002,
+      "original_threshold": 0.24000000000000002,
+      "score": 0.7230769230769231,
+      "n_positive": 74,
+      "class_weight": 1.0,
+      "status": "optimized"
+    },
+    "interesting": {
+      "threshold": 0.41000000000000003,
+      "original_threshold": 0.41000000000000003,
+      "score": 0.8110236220472441,
+      "n_positive": 333,
+      "class_weight": 1.0,
+      "status": "optimized"
+    },
+    "understandable": {
+      "threshold": 0.37,
+      "original_threshold": 0.37,
+      "score": 0.8110497237569061,
+      "n_positive": 421,
+      "class_weight": 1.0,
+      "status": "optimized"
+    },
+    "offensive": {
+      "threshold": 0.23,
+      "original_threshold": 0.23,
+      "score": 0.6881720430107527,
+      "n_positive": 115,
+      "class_weight": 1.0,
+      "status": "optimized"
+    },
+    "funny": {
+      "threshold": 0.25,
+      "original_threshold": 0.25,
+      "score": 0.9640287769784173,
+      "n_positive": 70,
+      "class_weight": 1.0,
+      "status": "optimized"
+    }
+  },
+  "config": {
+    "metric": "f1_score",
+    "search_strategy": "grid",
+    "n_thresholds": 81,
+    "search_range": [
+      0.1,
+      0.9
+    ],
+    "min_positive_samples": 5,
+    "default_threshold": 0.5,
+    "class_weight_adjustment": true
+  }
+}
