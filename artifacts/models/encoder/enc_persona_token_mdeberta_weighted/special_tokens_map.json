@@ -1,0 +1,77 @@
+{
+  "additional_special_tokens": [
+    "<lang=pl>",
+    "<lang=en>",
+    "<persona>",
+    "</persona>",
+    "<text>",
+    "</text>",
+    "<sep>",
+    "<p:senior_patient>",
+    "<p:young_mother>",
+    "<p:health_anxiety_patient>",
+    "<p:medically_educated_patient>",
+    "<p:low_education_patient>",
+    "<p:lgbtq_patient>",
+    "<p:rural_patient>",
+    "<p:young_adult_patient>",
+    "<p:supervising_physician>",
+    "<p:clinic_manager>",
+    "<p:complaints_specialist>",
+    "<p:healthcare_journalist>",
+    "<p:mental_health_advocate>",
+    "<p:ai_therapist>",
+    "<p:emotionally_sensitive_persona>",
+    "<p:neutral_rational_persona>",
+    "<p:empathic_persona>"
+  ],
+  "bos_token": {
+    "content": "[CLS]",
+    "lstrip": false,
+    "normalized": false,
+    "rstrip": false,
+    "single_word": false
+  },
+  "cls_token": {
+    "content": "[CLS]",
+    "lstrip": false,
+    "normalized": false,
+    "rstrip": false,
+    "single_word": false
+  },
+  "eos_token": {
+    "content": "[SEP]",
+    "lstrip": false,
+    "normalized": false,
+    "rstrip": false,
+    "single_word": false
+  },
+  "mask_token": {
+    "content": "[MASK]",
+    "lstrip": false,
+    "normalized": false,
+    "rstrip": false,
+    "single_word": false
+  },
+  "pad_token": {
+    "content": "[PAD]",
+    "lstrip": false,
+    "normalized": false,
+    "rstrip": false,
+    "single_word": false
+  },
+  "sep_token": {
+    "content": "[SEP]",
+    "lstrip": false,
+    "normalized": false,
+    "rstrip": false,
+    "single_word": false
+  },
+  "unk_token": {
+    "content": "[UNK]",
+    "lstrip": false,
+    "normalized": true,
+    "rstrip": false,
+    "single_word": false
+  }
+}

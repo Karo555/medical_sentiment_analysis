@@ -1,0 +1,277 @@
+{
+  "added_tokens_decoder": {
+    "0": {
+      "content": "[PAD]",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "1": {
+      "content": "[CLS]",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "2": {
+      "content": "[SEP]",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "3": {
+      "content": "[UNK]",
+      "lstrip": false,
+      "normalized": true,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250101": {
+      "content": "[MASK]",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250102": {
+      "content": "<lang=pl>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250103": {
+      "content": "<lang=en>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250104": {
+      "content": "<persona>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250105": {
+      "content": "</persona>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250106": {
+      "content": "<text>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250107": {
+      "content": "</text>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250108": {
+      "content": "<sep>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250109": {
+      "content": "<p:senior_patient>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250110": {
+      "content": "<p:young_mother>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250111": {
+      "content": "<p:health_anxiety_patient>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250112": {
+      "content": "<p:medically_educated_patient>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250113": {
+      "content": "<p:low_education_patient>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250114": {
+      "content": "<p:lgbtq_patient>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250115": {
+      "content": "<p:rural_patient>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250116": {
+      "content": "<p:young_adult_patient>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250117": {
+      "content": "<p:supervising_physician>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250118": {
+      "content": "<p:clinic_manager>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250119": {
+      "content": "<p:complaints_specialist>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250120": {
+      "content": "<p:healthcare_journalist>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250121": {
+      "content": "<p:mental_health_advocate>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250122": {
+      "content": "<p:ai_therapist>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250123": {
+      "content": "<p:emotionally_sensitive_persona>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250124": {
+      "content": "<p:neutral_rational_persona>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    },
+    "250125": {
+      "content": "<p:empathic_persona>",
+      "lstrip": false,
+      "normalized": false,
+      "rstrip": false,
+      "single_word": false,
+      "special": true
+    }
+  },
+  "additional_special_tokens": [
+    "<lang=pl>",
+    "<lang=en>",
+    "<persona>",
+    "</persona>",
+    "<text>",
+    "</text>",
+    "<sep>",
+    "<p:senior_patient>",
+    "<p:young_mother>",
+    "<p:health_anxiety_patient>",
+    "<p:medically_educated_patient>",
+    "<p:low_education_patient>",
+    "<p:lgbtq_patient>",
+    "<p:rural_patient>",
+    "<p:young_adult_patient>",
+    "<p:supervising_physician>",
+    "<p:clinic_manager>",
+    "<p:complaints_specialist>",
+    "<p:healthcare_journalist>",
+    "<p:mental_health_advocate>",
+    "<p:ai_therapist>",
+    "<p:emotionally_sensitive_persona>",
+    "<p:neutral_rational_persona>",
+    "<p:empathic_persona>"
+  ],
+  "bos_token": "[CLS]",
+  "clean_up_tokenization_spaces": false,
+  "cls_token": "[CLS]",
+  "do_lower_case": false,
+  "eos_token": "[SEP]",
+  "extra_special_tokens": {},
+  "mask_token": "[MASK]",
+  "model_max_length": 1000000000000000019884624838656,
+  "pad_token": "[PAD]",
+  "sep_token": "[SEP]",
+  "sp_model_kwargs": {},
+  "split_by_punct": false,
+  "tokenizer_class": "DebertaV2Tokenizer",
+  "unk_token": "[UNK]",
+  "vocab_type": "spm"
+}

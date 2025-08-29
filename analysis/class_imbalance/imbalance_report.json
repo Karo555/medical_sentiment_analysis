@@ -1,0 +1,673 @@
+{
+  "analysis_summary": {
+    "dataset_splits": [
+      "train",
+      "val",
+      "test"
+    ],
+    "total_emotion_labels": 18,
+    "label_names": [
+      "positive",
+      "negative",
+      "happiness",
+      "delight",
+      "inspiring",
+      "calm",
+      "surprise",
+      "compassion",
+      "fear",
+      "sadness",
+      "disgust",
+      "anger",
+      "ironic",
+      "political",
+      "interesting",
+      "understandable",
+      "offensive",
+      "funny"
+    ]
+  },
+  "overall_findings": {
+    "mean_imbalance_ratio": 4.664335122497482,
+    "median_imbalance_ratio": 4.3756830601092895,
+    "max_imbalance_ratio": 10.803571428571429,
+    "severely_imbalanced_labels": [
+      "calm"
+    ],
+    "proportion_severely_imbalanced": 0.05555555555555555
+  },
+  "per_split_analysis": {
+    "train": {
+      "split_name": "train",
+      "n_samples": 992,
+      "n_labels": 18,
+      "total_positive_labels": 4538,
+      "total_possible_labels": 17856,
+      "overall_sparsity": 0.7458557347670252,
+      "labels_per_sample": {
+        "mean": 4.574596774193548,
+        "std": 2.105216217228035,
+        "min": 0,
+        "max": 12,
+        "distribution": {
+          "4": 152,
+          "7": 88,
+          "3": 242,
+          "6": 92,
+          "10": 11,
+          "5": 190,
+          "8": 68,
+          "1": 37,
+          "0": 16,
+          "9": 25,
+          "2": 68,
+          "11": 2,
+          "12": 1
+        }
+      },
+      "per_label_stats": {
+        "positive": {
+          "index": 0,
+          "positive_count": 374,
+          "negative_count": 618,
+          "positive_ratio": 0.37701612903225806,
+          "negative_ratio": 0.6229838709677419,
+          "imbalance_ratio": 1.6524064171122994,
+          "minority_class": "positive",
+          "severity": "balanced"
+        },
+        "negative": {
+          "index": 1,
+          "positive_count": 601,
+          "negative_count": 391,
+          "positive_ratio": 0.6058467741935484,
+          "negative_ratio": 0.3941532258064516,
+          "imbalance_ratio": 1.537084398976982,
+          "minority_class": "negative",
+          "severity": "balanced"
+        },
+        "happiness": {
+          "index": 2,
+          "positive_count": 186,
+          "negative_count": 806,
+          "positive_ratio": 0.1875,
+          "negative_ratio": 0.8125,
+          "imbalance_ratio": 4.333333333333333,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "delight": {
+          "index": 3,
+          "positive_count": 114,
+          "negative_count": 878,
+          "positive_ratio": 0.11491935483870967,
+          "negative_ratio": 0.8850806451612904,
+          "imbalance_ratio": 7.701754385964913,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "inspiring": {
+          "index": 4,
+          "positive_count": 133,
+          "negative_count": 859,
+          "positive_ratio": 0.13407258064516128,
+          "negative_ratio": 0.8659274193548387,
+          "imbalance_ratio": 6.458646616541353,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "calm": {
+          "index": 5,
+          "positive_count": 91,
+          "negative_count": 901,
+          "positive_ratio": 0.09173387096774194,
+          "negative_ratio": 0.9082661290322581,
+          "imbalance_ratio": 9.901098901098901,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "surprise": {
+          "index": 6,
+          "positive_count": 234,
+          "negative_count": 758,
+          "positive_ratio": 0.23588709677419356,
+          "negative_ratio": 0.7641129032258065,
+          "imbalance_ratio": 3.2393162393162394,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "compassion": {
+          "index": 7,
+          "positive_count": 212,
+          "negative_count": 780,
+          "positive_ratio": 0.21370967741935484,
+          "negative_ratio": 0.7862903225806451,
+          "imbalance_ratio": 3.6792452830188678,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "fear": {
+          "index": 8,
+          "positive_count": 163,
+          "negative_count": 829,
+          "positive_ratio": 0.16431451612903225,
+          "negative_ratio": 0.8356854838709677,
+          "imbalance_ratio": 5.085889570552148,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "sadness": {
+          "index": 9,
+          "positive_count": 220,
+          "negative_count": 772,
+          "positive_ratio": 0.2217741935483871,
+          "negative_ratio": 0.7782258064516129,
+          "imbalance_ratio": 3.5090909090909093,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "disgust": {
+          "index": 10,
+          "positive_count": 159,
+          "negative_count": 833,
+          "positive_ratio": 0.16028225806451613,
+          "negative_ratio": 0.8397177419354839,
+          "imbalance_ratio": 5.238993710691824,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "anger": {
+          "index": 11,
+          "positive_count": 344,
+          "negative_count": 648,
+          "positive_ratio": 0.3467741935483871,
+          "negative_ratio": 0.6532258064516129,
+          "imbalance_ratio": 1.8837209302325582,
+          "minority_class": "positive",
+          "severity": "balanced"
+        },
+        "ironic": {
+          "index": 12,
+          "positive_count": 181,
+          "negative_count": 811,
+          "positive_ratio": 0.18245967741935484,
+          "negative_ratio": 0.8175403225806451,
+          "imbalance_ratio": 4.480662983425415,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "political": {
+          "index": 13,
+          "positive_count": 102,
+          "negative_count": 890,
+          "positive_ratio": 0.1028225806451613,
+          "negative_ratio": 0.8971774193548387,
+          "imbalance_ratio": 8.72549019607843,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "interesting": {
+          "index": 14,
+          "positive_count": 507,
+          "negative_count": 485,
+          "positive_ratio": 0.5110887096774194,
+          "negative_ratio": 0.4889112903225806,
+          "imbalance_ratio": 1.045360824742268,
+          "minority_class": "negative",
+          "severity": "balanced"
+        },
+        "understandable": {
+          "index": 15,
+          "positive_count": 641,
+          "negative_count": 351,
+          "positive_ratio": 0.6461693548387096,
+          "negative_ratio": 0.3538306451612903,
+          "imbalance_ratio": 1.8262108262108263,
+          "minority_class": "negative",
+          "severity": "balanced"
+        },
+        "offensive": {
+          "index": 16,
+          "positive_count": 164,
+          "negative_count": 828,
+          "positive_ratio": 0.16532258064516128,
+          "negative_ratio": 0.8346774193548387,
+          "imbalance_ratio": 5.048780487804878,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "funny": {
+          "index": 17,
+          "positive_count": 112,
+          "negative_count": 880,
+          "positive_ratio": 0.11290322580645161,
+          "negative_ratio": 0.8870967741935484,
+          "imbalance_ratio": 7.857142857142857,
+          "minority_class": "positive",
+          "severity": "moderate"
+        }
+      }
+    },
+    "val": {
+      "split_name": "val",
+      "n_samples": 661,
+      "n_labels": 18,
+      "total_positive_labels": 3043,
+      "total_possible_labels": 11898,
+      "overall_sparsity": 0.7442427298705665,
+      "labels_per_sample": {
+        "mean": 4.603630862329803,
+        "std": 2.160766689564804,
+        "min": 0,
+        "max": 10,
+        "distribution": {
+          "7": 58,
+          "3": 135,
+          "4": 97,
+          "5": 145,
+          "8": 45,
+          "0": 13,
+          "10": 16,
+          "2": 53,
+          "1": 28,
+          "9": 13,
+          "6": 58
+        }
+      },
+      "per_label_stats": {
+        "positive": {
+          "index": 0,
+          "positive_count": 243,
+          "negative_count": 418,
+          "positive_ratio": 0.367624810892587,
+          "negative_ratio": 0.632375189107413,
+          "imbalance_ratio": 1.7201646090534979,
+          "minority_class": "positive",
+          "severity": "balanced"
+        },
+        "negative": {
+          "index": 1,
+          "positive_count": 407,
+          "negative_count": 254,
+          "positive_ratio": 0.6157337367624811,
+          "negative_ratio": 0.3842662632375189,
+          "imbalance_ratio": 1.6023622047244095,
+          "minority_class": "negative",
+          "severity": "balanced"
+        },
+        "happiness": {
+          "index": 2,
+          "positive_count": 122,
+          "negative_count": 539,
+          "positive_ratio": 0.18456883509833585,
+          "negative_ratio": 0.8154311649016641,
+          "imbalance_ratio": 4.418032786885246,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "delight": {
+          "index": 3,
+          "positive_count": 65,
+          "negative_count": 596,
+          "positive_ratio": 0.09833585476550681,
+          "negative_ratio": 0.9016641452344932,
+          "imbalance_ratio": 9.169230769230769,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "inspiring": {
+          "index": 4,
+          "positive_count": 77,
+          "negative_count": 584,
+          "positive_ratio": 0.11649016641452345,
+          "negative_ratio": 0.8835098335854765,
+          "imbalance_ratio": 7.584415584415584,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "calm": {
+          "index": 5,
+          "positive_count": 56,
+          "negative_count": 605,
+          "positive_ratio": 0.08472012102874432,
+          "negative_ratio": 0.9152798789712556,
+          "imbalance_ratio": 10.803571428571429,
+          "minority_class": "positive",
+          "severity": "severe"
+        },
+        "surprise": {
+          "index": 6,
+          "positive_count": 153,
+          "negative_count": 508,
+          "positive_ratio": 0.2314674735249622,
+          "negative_ratio": 0.7685325264750378,
+          "imbalance_ratio": 3.320261437908497,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "compassion": {
+          "index": 7,
+          "positive_count": 151,
+          "negative_count": 510,
+          "positive_ratio": 0.22844175491679275,
+          "negative_ratio": 0.7715582450832073,
+          "imbalance_ratio": 3.377483443708609,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "fear": {
+          "index": 8,
+          "positive_count": 115,
+          "negative_count": 546,
+          "positive_ratio": 0.17397881996974282,
+          "negative_ratio": 0.8260211800302572,
+          "imbalance_ratio": 4.747826086956522,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "sadness": {
+          "index": 9,
+          "positive_count": 154,
+          "negative_count": 507,
+          "positive_ratio": 0.2329803328290469,
+          "negative_ratio": 0.7670196671709532,
+          "imbalance_ratio": 3.292207792207792,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "disgust": {
+          "index": 10,
+          "positive_count": 124,
+          "negative_count": 537,
+          "positive_ratio": 0.1875945537065053,
+          "negative_ratio": 0.8124054462934948,
+          "imbalance_ratio": 4.330645161290323,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "anger": {
+          "index": 11,
+          "positive_count": 241,
+          "negative_count": 420,
+          "positive_ratio": 0.36459909228441756,
+          "negative_ratio": 0.6354009077155824,
+          "imbalance_ratio": 1.7427385892116183,
+          "minority_class": "positive",
+          "severity": "balanced"
+        },
+        "ironic": {
+          "index": 12,
+          "positive_count": 122,
+          "negative_count": 539,
+          "positive_ratio": 0.18456883509833585,
+          "negative_ratio": 0.8154311649016641,
+          "imbalance_ratio": 4.418032786885246,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "political": {
+          "index": 13,
+          "positive_count": 74,
+          "negative_count": 587,
+          "positive_ratio": 0.11195158850226929,
+          "negative_ratio": 0.8880484114977307,
+          "imbalance_ratio": 7.9324324324324325,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "interesting": {
+          "index": 14,
+          "positive_count": 333,
+          "negative_count": 328,
+          "positive_ratio": 0.5037821482602118,
+          "negative_ratio": 0.4962178517397882,
+          "imbalance_ratio": 1.0152439024390243,
+          "minority_class": "negative",
+          "severity": "balanced"
+        },
+        "understandable": {
+          "index": 15,
+          "positive_count": 421,
+          "negative_count": 240,
+          "positive_ratio": 0.6369137670196672,
+          "negative_ratio": 0.3630862329803328,
+          "imbalance_ratio": 1.7541666666666667,
+          "minority_class": "negative",
+          "severity": "balanced"
+        },
+        "offensive": {
+          "index": 16,
+          "positive_count": 115,
+          "negative_count": 546,
+          "positive_ratio": 0.17397881996974282,
+          "negative_ratio": 0.8260211800302572,
+          "imbalance_ratio": 4.747826086956522,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "funny": {
+          "index": 17,
+          "positive_count": 70,
+          "negative_count": 591,
+          "positive_ratio": 0.1059001512859304,
+          "negative_ratio": 0.8940998487140696,
+          "imbalance_ratio": 8.442857142857143,
+          "minority_class": "positive",
+          "severity": "moderate"
+        }
+      }
+    },
+    "test": {
+      "split_name": "test",
+      "n_samples": 655,
+      "n_labels": 18,
+      "total_positive_labels": 3031,
+      "total_possible_labels": 11790,
+      "overall_sparsity": 0.7429177268871925,
+      "labels_per_sample": {
+        "mean": 4.627480916030534,
+        "std": 2.1009286727073198,
+        "min": 0,
+        "max": 12,
+        "distribution": {
+          "4": 136,
+          "7": 59,
+          "8": 44,
+          "5": 109,
+          "3": 136,
+          "0": 15,
+          "6": 71,
+          "2": 42,
+          "1": 18,
+          "10": 8,
+          "9": 14,
+          "12": 2,
+          "11": 1
+        }
+      },
+      "per_label_stats": {
+        "positive": {
+          "index": 0,
+          "positive_count": 243,
+          "negative_count": 412,
+          "positive_ratio": 0.3709923664122137,
+          "negative_ratio": 0.6290076335877862,
+          "imbalance_ratio": 1.6954732510288066,
+          "minority_class": "positive",
+          "severity": "balanced"
+        },
+        "negative": {
+          "index": 1,
+          "positive_count": 403,
+          "negative_count": 252,
+          "positive_ratio": 0.6152671755725191,
+          "negative_ratio": 0.3847328244274809,
+          "imbalance_ratio": 1.5992063492063493,
+          "minority_class": "negative",
+          "severity": "balanced"
+        },
+        "happiness": {
+          "index": 2,
+          "positive_count": 130,
+          "negative_count": 525,
+          "positive_ratio": 0.1984732824427481,
+          "negative_ratio": 0.8015267175572519,
+          "imbalance_ratio": 4.038461538461538,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "delight": {
+          "index": 3,
+          "positive_count": 77,
+          "negative_count": 578,
+          "positive_ratio": 0.11755725190839694,
+          "negative_ratio": 0.8824427480916031,
+          "imbalance_ratio": 7.5064935064935066,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "inspiring": {
+          "index": 4,
+          "positive_count": 81,
+          "negative_count": 574,
+          "positive_ratio": 0.12366412213740458,
+          "negative_ratio": 0.8763358778625954,
+          "imbalance_ratio": 7.08641975308642,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "calm": {
+          "index": 5,
+          "positive_count": 61,
+          "negative_count": 594,
+          "positive_ratio": 0.09312977099236641,
+          "negative_ratio": 0.9068702290076336,
+          "imbalance_ratio": 9.737704918032787,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "surprise": {
+          "index": 6,
+          "positive_count": 170,
+          "negative_count": 485,
+          "positive_ratio": 0.2595419847328244,
+          "negative_ratio": 0.7404580152671756,
+          "imbalance_ratio": 2.8529411764705883,
+          "minority_class": "positive",
+          "severity": "balanced"
+        },
+        "compassion": {
+          "index": 7,
+          "positive_count": 148,
+          "negative_count": 507,
+          "positive_ratio": 0.22595419847328244,
+          "negative_ratio": 0.7740458015267175,
+          "imbalance_ratio": 3.425675675675676,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "fear": {
+          "index": 8,
+          "positive_count": 108,
+          "negative_count": 547,
+          "positive_ratio": 0.1648854961832061,
+          "negative_ratio": 0.8351145038167939,
+          "imbalance_ratio": 5.064814814814815,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "sadness": {
+          "index": 9,
+          "positive_count": 151,
+          "negative_count": 504,
+          "positive_ratio": 0.23053435114503817,
+          "negative_ratio": 0.7694656488549618,
+          "imbalance_ratio": 3.337748344370861,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "disgust": {
+          "index": 10,
+          "positive_count": 107,
+          "negative_count": 548,
+          "positive_ratio": 0.1633587786259542,
+          "negative_ratio": 0.8366412213740458,
+          "imbalance_ratio": 5.121495327102804,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "anger": {
+          "index": 11,
+          "positive_count": 233,
+          "negative_count": 422,
+          "positive_ratio": 0.35572519083969467,
+          "negative_ratio": 0.6442748091603053,
+          "imbalance_ratio": 1.8111587982832618,
+          "minority_class": "positive",
+          "severity": "balanced"
+        },
+        "ironic": {
+          "index": 12,
+          "positive_count": 118,
+          "negative_count": 537,
+          "positive_ratio": 0.1801526717557252,
+          "negative_ratio": 0.8198473282442749,
+          "imbalance_ratio": 4.5508474576271185,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "political": {
+          "index": 13,
+          "positive_count": 62,
+          "negative_count": 593,
+          "positive_ratio": 0.09465648854961832,
+          "negative_ratio": 0.9053435114503817,
+          "imbalance_ratio": 9.564516129032258,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "interesting": {
+          "index": 14,
+          "positive_count": 347,
+          "negative_count": 308,
+          "positive_ratio": 0.5297709923664122,
+          "negative_ratio": 0.47022900763358777,
+          "imbalance_ratio": 1.1266233766233766,
+          "minority_class": "negative",
+          "severity": "balanced"
+        },
+        "understandable": {
+          "index": 15,
+          "positive_count": 419,
+          "negative_count": 236,
+          "positive_ratio": 0.6396946564885496,
+          "negative_ratio": 0.3603053435114504,
+          "imbalance_ratio": 1.7754237288135593,
+          "minority_class": "negative",
+          "severity": "balanced"
+        },
+        "offensive": {
+          "index": 16,
+          "positive_count": 106,
+          "negative_count": 549,
+          "positive_ratio": 0.1618320610687023,
+          "negative_ratio": 0.8381679389312977,
+          "imbalance_ratio": 5.179245283018868,
+          "minority_class": "positive",
+          "severity": "moderate"
+        },
+        "funny": {
+          "index": 17,
+          "positive_count": 67,
+          "negative_count": 588,
+          "positive_ratio": 0.10229007633587786,
+          "negative_ratio": 0.8977099236641222,
+          "imbalance_ratio": 8.776119402985074,
+          "minority_class": "positive",
+          "severity": "moderate"
+        }
+      }
+    }
+  },
+  "recommendations": []
+}
