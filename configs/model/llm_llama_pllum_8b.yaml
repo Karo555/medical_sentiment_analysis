@@ -1,0 +1,34 @@
+# configs/model/llm_llama_pllum_8b.yaml
+# CYFRAGOVPL Llama-PLLuM-8B-instruct model configuration for Polish medical sentiment analysis
+
+model:
+  name_or_path: "CYFRAGOVPL/Llama-PLLuM-8B-instruct"
+  use_flash_attention: true
+  torch_dtype: "bfloat16"
+  device_map: "auto"
+  use_4bit: false
+  use_8bit: false
+  trust_remote_code: true
+  # Polish-optimized model doesn't need additional remote code
+
+tokenizer:
+  path_or_name: "CYFRAGOVPL/Llama-PLLuM-8B-instruct"
+  use_fast: true
+  padding_side: "left"  # Important for causal LM
+  # Model should have Polish tokenizer built-in
+
+# LoRA configuration for efficient fine-tuning
+lora:
+  enabled: true  # Enable LoRA for 8B model to reduce memory usage
+  r: 32          # Higher rank for better performance on 8B model
+  lora_alpha: 64 # Alpha = 2 * r for stable training
+  lora_dropout: 0.05  # Lower dropout for larger model
+  target_modules: ["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"]
+  bias: "none"
+  modules_to_save: null
+  
+# Memory optimization for 8B model
+memory_optimization:
+  gradient_checkpointing: true
+  dataloader_pin_memory: false
+  max_memory_buffer: 0.9

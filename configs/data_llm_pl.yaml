@@ -1,0 +1,266 @@
+# configs/data_llm_pl.yaml
+# Konfiguracja WIDOKU DANYCH dla LLM - wersja POLSKA
+# Specjalna konfiguracja do generowania polskich danych z mapowaniem z translated_meta.tsv
+
+version: 1
+name: llm_data_view_polish
+description: >
+  Polskie dane do fine-tuningu LLM w schemacie input->output.
+  Używa mapowania z translated_meta.tsv aby zastąpić angielskie opinie polskimi.
+  input_text to pełny prompt z polską instrukcją, personą i polskim tekstem opinii,
+  target_text to dokładny JSON z wektorem 21 wartości [0,1].
+
+# ---------------------------------------------------------------------------
+# ŚCIEŻKI I PLIKI
+# ---------------------------------------------------------------------------
+paths:
+  raw_dir: data/raw
+  processed_dir: data/processed/base
+  view_dir: data/processed/llm_pl         # ZMIANA: polskie dane
+  reports_dir: reports/llm_pl
+  personas_file_en: data/personas/personas_en.json
+  personas_file_pl: data/personas/personas_pl.json
+  label_names_file: schema/label_names.json
+  # NOWE: mapowanie opinii z angielskiego na polski
+  translated_meta_file: data/raw/translated_meta.tsv
+
+files:
+  train: train.jsonl
+  val: val.jsonl
+  test: test.jsonl
+
+# Jeśli używamy gotowych splitów zewnętrznych (zalecane):
+external_splits:
+  enabled: true
+  dir: data/splits
+  train: train_ids.csv
+  val: val_ids.csv
+  test: test_ids.csv
+
+# ---------------------------------------------------------------------------
+# KONTRAKT ŹRÓDŁOWEGO REKORDU (po preprocessingu „base")
+# ---------------------------------------------------------------------------
+source_record_contract:
+  required_fields:
+    - id
+    - text
+    - persona_id
+    - persona_desc
+    - lang
+    - labels
+  field_types:
+    id: string
+    text: string
+    persona_id: string
+    persona_desc: string
+    lang: string         # filtrujemy tylko 'pl'
+    labels: array[float] # długość = 21
+  constraints:
+    lang_allowed: ["pl"]  # ZMIANA: tylko polski
+    labels_length: 21
+    labels_range: [0.0, 1.0]
+    persona_id_pattern: "^[a-z0-9_\\-]+$"
+  on_missing:
+    policy: drop_with_report
+  on_out_of_range:
+    policy: clamp_and_report
+
+# ---------------------------------------------------------------------------
+# BUDOWANIE PROMPTU (input_text) - POLSKIE INSTRUKCJE
+# ---------------------------------------------------------------------------
+prompt:
+  tokens:
+    lang_tag_format: "<lang={lang}>"
+    persona_token_format: "<p:{persona_id}>"
+    persona_block:
+      start: "<persona>"
+      end: "</persona>"
+
+  global:
+    include_trailing_newline: true
+    normalize_whitespace: true
+    strip_input_text: true
+    max_total_chars: 6000
+    fixed_system_lang: "pl"
+    truncate_strategy: "end"
+    add_system_prefix: true
+
+  # ZMIANA: Polskie instrukcje z polskimi nazwami emocji
+  system_prefix: |
+    Instrukcja: 
+    Na podstawie TEKSTU OPINII i (jeśli podano) opisu OSOBY, przewidź 21 wartości emocji:
+    {"Pozytywne", "Negatywne", "Szczęście", "Zachwyt", "Inspirujące", "Spokój", "Zaskoczenie", "Współczucie", "Strach", "Smutek", "Obrzydzenie", "Złość", "Ironiczne", "Kłopotliwe", "Wulgarne", "Polityczne", "Interesujące", "Zrozumiałe", "Więcej", "Obraźliwe", "Zabawne"}
+    oznaczając 1 jeśli emocja jest obecna lub 0 jeśli nie.
+    Zwróć DOKŁADNIE JSON: {"labels":[f1,...,f21]} z 21 liczbami w [0,1]. Bez dodatkowego tekstu.
+
+  modes:
+    non_personalized: |
+      {system_prefix}
+      {lang_tag}
+      Tekst opinii: {text}
+
+    personalized_desc: |
+      {system_prefix}
+      {lang_tag}
+      {persona_block_start}
+      {persona_desc}
+      {persona_block_end}
+      Tekst opinii: {text}
+
+    persona_token: |
+      {system_prefix}
+      {persona_token} {lang_tag}
+      Tekst opinii: {text}
+
+    personalized_instruction: |
+      Instrukcja: Jako system oceny emocji uwzględnij profil osoby i jej wrażliwości.
+      Oceń TEKST OPINII w 21 wymiarach (0–1) i zwróć TYLKO JSON:
+      {"labels": [f1, f2, ..., f21]}
+      Profil osoby:
+      {persona_desc}
+      {lang_tag}
+      Tekst opinii: {text}
+
+  render:
+    include_lang_tag: true
+    include_persona_token_in_modes: ["persona_token"]
+    include_persona_desc_in_modes: ["personalized_desc", "personalized_instruction"]
+    collapse_empty_lines: true
+
+# ---------------------------------------------------------------------------
+# TARGET (output_text) – JSON z 21 wartościami
+# ---------------------------------------------------------------------------
+target:
+  json:
+    key: "labels"
+    length: 21
+    float_precision: 3
+    ensure_ascii: false
+    separators: [",", ":"]
+    allow_whitespace: false
+    sorted_keys: false
+  validation:
+    schema: |
+      {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "required": ["labels"],
+        "properties": {
+          "labels": {
+            "type": "array",
+            "minItems": 21,
+            "maxItems": 21,
+            "items": {
+              "type": "number",
+              "minimum": 0.0,
+              "maximum": 1.0
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    on_invalid_json: "attempt_fix_then_drop"
+    fixup:
+      truncate_after_last_bracket: true
+      replace_single_quotes: true
+      remove_trailing_commas: true
+      coerce_non_numbers_to_float: 0.0
+      clamp_values_to_range: [0.0, 1.0]
+      pad_or_trim_to_length: 21
+  build_from_labels:
+    enabled: true
+    number_format: "fixed"
+    float_precision: 3
+    ensure_sorted_order_by_label_names_file: true
+
+# ---------------------------------------------------------------------------
+# FILTRY I SANITY CHECK - TYLKO POLSKIE
+# ---------------------------------------------------------------------------
+filters:
+  text_min_chars: 5
+  text_max_chars: 4000
+  # ZMIANA: Filtruj tylko polskie rekordy
+  lang_filter: ["pl"]
+  drop_if_missing_persona_desc_in_modes: ["personalized_desc", "personalized_instruction"]
+  deduplication:
+    enabled: true
+    scope: "within-split"
+    key: "text"
+    normalization:
+      lower: true
+      strip: true
+      collapse_spaces: true
+
+# ---------------------------------------------------------------------------
+# BALANSOWANIE / SAMPLING
+# ---------------------------------------------------------------------------
+balancing:
+  enabled: false  # ZMIANA: wyłączone, bo mamy tylko polski
+  by_lang:
+    target_dist:
+      pl: 1.0  # 100% polski
+    strategy: "none"
+  by_persona:
+    min_per_persona: 10  # ZMIANA: mniejsze minimum dla polskiego
+    max_per_persona: 1000
+    strategy: "clip_and_reweight"
+
+# ---------------------------------------------------------------------------
+# MATERALIZACJA WIDOKU I KOLUMN
+# ---------------------------------------------------------------------------
+materialization:
+  output_format: "jsonl"
+  output_columns:
+    - id
+    - input_text
+    - target_text
+    - lang
+    - persona_id
+  write_mode: "overwrite"
+  shard_size: 100000
+  write_reports:
+    schema_violations: true
+    fixups_applied: true
+    class_balance: true
+
+# ---------------------------------------------------------------------------
+# POWIĄZANIA ZE SPLITAMI
+# ---------------------------------------------------------------------------
+splits:
+  use_external: true
+  if_external_missing_fallback: "random"
+  random_seed: 1337
+  random_ratios:
+    train: 0.8
+    val: 0.1
+    test: 0.1
+  stratify_by: ["lang", "persona_id"]
+
+# ---------------------------------------------------------------------------
+# AUGMENTACJE (opcjonalne – domyślnie wyłączone)
+# ---------------------------------------------------------------------------
+augmentation:
+  enabled: false
+  methods:
+    backtranslation:
+      enabled: false
+      langs: ["pl", "en"]
+      probability: 0.1
+    paraphrase:
+      enabled: false
+      probability: 0.1
+  apply_to:
+    text: true
+    persona_desc: false
+
+# ---------------------------------------------------------------------------
+# LOGOWANIE I REPRODUKCJA
+# ---------------------------------------------------------------------------
+logging:
+  level: "INFO"
+  preview_n_examples_per_split: 3
+  save_preview_to: "reports/llm_pl/preview_examples.jsonl"
+
+reproducibility:
+  seed: 1337
+  deterministic_ops: true

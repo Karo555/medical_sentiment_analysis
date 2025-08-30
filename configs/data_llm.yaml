@@ -21,7 +21,8 @@ paths:
   processed_dir: data/processed/base        # dane po preprocessingu
   view_dir: data/processed/llm         # materializacja widoku LLM (input_text/target_text)
   reports_dir: reports/llm             # raporty walidacji
-  personas_file: data/personas/personas.json      # kanoniczny słownik person (opcjonalny)
+  personas_file_en: data/personas/personas_en.json      # kanoniczny słownik person (angielski)
+  personas_file_pl: data/personas/personas_pl.json      # kanoniczny słownik person (polski)
   label_names_file: schema/label_names.json       # lista 21 nazw etykiet (kolejność)
 
 files:
