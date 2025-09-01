@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Łączy opinions.json + emotion_matrix.json (+ personas.json + label_names.json)
+Łączy opinions.json + emotion_matrix.json (+ personas_en.json + personas_pl.json + label_names.json)
 → zapisuje data/processed/base/all.jsonl w formacie:
 {"id","opinion_id","text","persona_id","persona_desc","lang","labels":[21x float 0..1]}
 
@@ -167,7 +167,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--opinions", required=True, help="Ścieżka do opinions.json (lista, dict lub JSONL)")
     ap.add_argument("--matrix", required=True, help="Ścieżka do emotion_matrix.json (dict opinion_key -> persona -> label->value)")
-    ap.add_argument("--personas", required=True, help="Ścieżka do data/personas/personas.json")
+    ap.add_argument("--personas-en", required=True, help="Ścieżka do data/personas/personas_en.json")
+    ap.add_argument("--personas-pl", required=True, help="Ścieżka do data/personas/personas_pl.json")
     ap.add_argument("--label_names", required=True, help="Ścieżka do schema/label_names.json (kolejność 21 etykiet)")
     ap.add_argument("--out", default="data/processed/base/all.jsonl", help="Ścieżka wyjściowa JSONL")
     # mapowanie pól / join
@@ -181,7 +182,8 @@ def main():
 
     opinions_path = Path(args.opinions)
     matrix_path = Path(args.matrix)
-    personas_path = Path(args.personas)
+    personas_en_path = Path(getattr(args, 'personas_en'))
+    personas_pl_path = Path(getattr(args, 'personas_pl'))
     labels_path = Path(args.label_names)
     out_path = Path(args.out)
     out_path.parent.mkdir(parents=True, exist_ok=True)
@@ -190,14 +192,22 @@ def main():
     op_raw = load_json_maybe_jsonl(opinions_path)
     ops = normalize_opinion_records(op_raw)
     matrix: Dict[str, Any] = json.loads(matrix_path.read_text(encoding="utf-8"))
-    personas_list: List[Dict[str, Any]] = json.loads(personas_path.read_text(encoding="utf-8"))
+    personas_en_list: List[Dict[str, Any]] = json.loads(personas_en_path.read_text(encoding="utf-8"))
+    personas_pl_list: List[Dict[str, Any]] = json.loads(personas_pl_path.read_text(encoding="utf-8"))
     label_names_raw: List[str] = json.loads(labels_path.read_text(encoding="utf-8"))
     # kanonizujemy nazwy etykiet do dolnego case'u tylko na potrzeby dopasowania,
     # ale zachowujemy oryginalną kolejność z pliku
     label_names = [str(n) for n in label_names_raw]
 
     # 2) Indeksy pomocnicze
-    personas_by_id = {p["id"]: p for p in personas_list if isinstance(p, dict) and "id" in p}
+    # Połącz persony z obu języków w jeden słownik
+    personas_by_id = {}
+    for p in personas_en_list:
+        if isinstance(p, dict) and "id" in p:
+            personas_by_id[p["id"]] = p
+    for p in personas_pl_list:
+        if isinstance(p, dict) and "id" in p:
+            personas_by_id[p["id"]] = p
 
     # heurystyka pola tekstowego
     text_candidates = [args.text_field, "tekst", "text", "content", "opinia", "review"]

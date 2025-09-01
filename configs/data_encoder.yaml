@@ -26,7 +26,8 @@ paths:
   view_dir: data/processed/encoder       # materializacja widoku ENCODER
   tokenized_dir: data/processed/encoder_tokenized  # (opcjonalnie) zapis potokenizowanych danych
   reports_dir: reports/encoder
-  personas_file: data/personas/personas.json      # słownik person (opcjonalnie do sanity check)
+  personas_file_en: data/personas/personas_en.json      # słownik person (angielski)
+  personas_file_pl: data/personas/personas_pl.json      # słownik person (polski)
   label_names_file: schema/label_names.json       # lista 18 nazw etykiet (kolejność)
 
 files:
@@ -130,7 +131,8 @@ special_tokens:
   # Skąd wziąć listę persona_id do rejestracji (opcjonalnie, można też rejestrować on-the-fly)
   build_from_personas_file:
     enabled: true
-    file: data/personas/personas.json   # oczekiwany klucz: id
+    file_en: data/personas/personas_en.json   # angielskie persony
+    file_pl: data/personas/personas_pl.json   # polskie persony
     # Jeśli false → rejestruj tokeny „on demand” podczas runtime’u
 
 # ---------------------------------------------------------------------------

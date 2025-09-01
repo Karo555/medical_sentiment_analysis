@@ -123,7 +123,7 @@ def apply_lora_to_model(
 
 def parse_emotion_labels_from_generation(
     generated_texts: List[str],
-    expected_length: int = 21
+    expected_length: int = 18
 ) -> List[Optional[List[float]]]:
     """
     Parse emotion labels from generated JSON strings.

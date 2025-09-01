@@ -15,7 +15,8 @@ paths:
   root: .
   raw_dir: data/raw
   processed_base_dir: data/processed/base        # rekordy po wspólnym preprocessie
-  personas_file: data/personas/personas.json     # kanoniczny słownik person
+  personas_file_en: data/personas/personas_en.json     # kanoniczny słownik person (angielski)
+  personas_file_pl: data/personas/personas_pl.json     # kanoniczny słownik person (polski)
   label_names_file: schema/label_names.json      # kolejność 21 etykiet
   splits_dir: data/splits
   reports_dir: reports/base
